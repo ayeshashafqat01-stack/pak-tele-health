@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pak-Tele-Health — MVP prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f6f5;--surface:#fff;--ink:#15262a;--muted:#566a6e;--line:#d4dfdd;--brand:#0d6b6e;--brand-strong:#0a4f52;--on-brand:#fff;--nav:#0c3438;
+--ok:#1b6638;--ok-bg:#e0f3e6;--warn:#7d4a00;--warn-bg:#fdeed0;--bad:#a3231a;--bad-bg:#fbe2df;--priv:#4f3d91;--priv-bg:#ebe6fa;--info:#1f5a8a;--info-bg:#dfedf9;--focus:#1a73e8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1c;--surface:#162629;--ink:#e4efee;--muted:#9bb0b3;--line:#2a3f43;--brand:#4cc3c6;--brand-strong:#7ad6d8;--on-brand:#062022;--nav:#0a1315;--ok:#86d9a1;--ok-bg:#173a25;--warn:#f2c277;--warn-bg:#3d2d10;--bad:#f6aaa3;--bad-bg:#47201d;--priv:#c6b9f4;--priv-bg:#2c2550;--info:#92c8f3;--info-bg:#173048;--focus:#8ab4f8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1a1c;--surface:#162629;--ink:#e4efee;--muted:#9bb0b3;--line:#2a3f43;--brand:#4cc3c6;--brand-strong:#7ad6d8;--on-brand:#062022;--nav:#0a1315;--ok:#86d9a1;--ok-bg:#173a25;--warn:#f2c277;--warn-bg:#3d2d10;--bad:#f6aaa3;--bad-bg:#47201d;--priv:#c6b9f4;--priv-bg:#2c2550;--info:#92c8f3;--info-bg:#173048;--focus:#8ab4f8;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--nav);z-index:30}
+h1,h2,h3{margin:0;line-height:1.25}h1{font-size:1.5rem}h2{font-size:1.15rem}h3{font-size:1rem}p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.muted{color:var(--muted)}.small{font-size:.875rem}
+.row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}
+.tw{overflow-x:auto}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--nav);color:#d3ebe9;padding:.55rem 1.1rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.top b{color:#fff}
+.nav{display:flex;gap:.3rem;flex-wrap:wrap;align-items:center}
+.nav button{all:unset;cursor:pointer;padding:.4rem .75rem;border-radius:6px;color:#d3ebe9}
+.nav button:hover{background:rgba(255,255,255,.1)}
+.nav button[aria-current="page"]{background:#134a4f;color:#fff;font-weight:700;box-shadow:inset 0 -3px 0 #6fd6d9}
+.nav button:focus-visible{outline:3px solid #fff}
+.conn{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.dot{width:.7rem;height:.7rem;border-radius:50%;display:inline-block}
+.dot.online{background:#4cc27a}.dot.weak{background:#f0a828}.dot.offline{background:#ef5a4e}
+.seg{display:inline-flex;border:1px solid rgba(255,255,255,.35);border-radius:6px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:.25rem .65rem;font-size:.85rem;border-right:1px solid rgba(255,255,255,.35)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:#6fd6d9;color:#042a2c;font-weight:700}
+.seg button:focus-visible{outline:3px solid #fff;outline-offset:-3px}
+.seg.light{border-color:var(--line)}.seg.light button{border-right-color:var(--line);color:var(--ink)}.seg.light button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.banner{padding:.6rem 1.1rem;font-weight:700}
+.banner.offline{background:var(--bad-bg);color:var(--bad)}.banner.weak{background:var(--warn-bg);color:var(--warn)}.banner.sync{background:var(--info-bg);color:var(--info)}
+.page{max-width:1020px;margin:0 auto;padding:1.1rem}.page>*+*{margin-top:1rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1rem 1.1rem}
+.card>h2+*{margin-top:.7rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}
+.kpi{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--brand);border-radius:8px;padding:.7rem 1rem}
+.kpi .v{font-size:1.9rem;font-weight:700;line-height:1.1}.kpi .l{color:var(--muted);font-size:.9rem}
+.kpi.warn{border-top-color:#e0900f}.kpi.bad{border-top-color:#c8372d}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+.btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;padding:.55rem .95rem;border-radius:6px;border:1px solid var(--brand);color:var(--brand-strong);background:var(--surface);font-weight:700;font-size:.95rem}
+.btn:hover{background:var(--bg)}.btn.primary{background:var(--brand);color:var(--on-brand)}.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:var(--line);color:var(--ink);font-weight:400}.btn.sm{padding:.3rem .65rem;font-size:.875rem}
+.btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.badge{display:inline-flex;padding:.1rem .55rem;border-radius:4px;font-size:.82rem;font-weight:700;white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}.badge.warn{background:var(--warn-bg);color:var(--warn)}.badge.bad{background:var(--bad-bg);color:var(--bad)}.badge.priv{background:var(--priv-bg);color:var(--priv)}.badge.info{background:var(--info-bg);color:var(--info)}.badge.neutral{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line)}th{font-size:.85rem;color:var(--muted);white-space:nowrap}tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--bg)}
+.alert{background:var(--surface);border:1px solid var(--line);border-left:6px solid #e0900f;border-radius:8px;padding:.85rem 1rem}
+.alert.high{border-left-color:#c8372d}.alert.private{border-left-color:#6b55c4}.alert.done{border-left-color:var(--line)}
+.alert .why{font-size:.85rem;color:var(--muted);margin-top:.35rem}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.85rem 1rem}
+.fld{display:flex;flex-direction:column;gap:.25rem}.fld>span{font-weight:700;font-size:.92rem}.fld.wide{grid-column:1/-1}
+input[type=text],input[type=number],select,textarea{width:100%;padding:.55rem .65rem;border:1px solid #8aa0a3;border-radius:6px;background:var(--surface);min-height:2.6rem}
+textarea{min-height:5rem;resize:vertical}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{display:inline-flex;align-items:center;gap:.45rem;border:1px solid var(--line);border-radius:6px;padding:.4rem .7rem;cursor:pointer;background:var(--surface)}
+.chip:has(input:checked){border-color:var(--brand);background:var(--info-bg);font-weight:700}
+.chip:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.chip input{width:1.05rem;height:1.05rem;accent-color:var(--brand)}
+.note{background:var(--info-bg);color:var(--info);border-radius:6px;padding:.6rem .8rem;font-size:.92rem}
+.note.priv{background:var(--priv-bg);color:var(--priv)}.note.warn{background:var(--warn-bg);color:var(--warn)}.note.ok{background:var(--ok-bg);color:var(--ok)}
+.q{border:1px solid var(--line);border-radius:8px;padding:.7rem 1rem;margin:0}.q legend{font-weight:700;padding:0 .3rem}
+.vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem}
+.vital{border:1px solid var(--line);border-radius:8px;padding:.6rem .8rem;background:var(--surface)}
+.vital .t{font-size:.85rem;color:var(--muted)}.vital .v{font-size:1.4rem;font-weight:700;line-height:1.2}.vital .m{font-size:.78rem;color:var(--muted)}
+.vital.flag{border-color:#c8372d;background:var(--bad-bg)}
+.chart svg{width:100%;height:auto;display:block}.chart text{fill:var(--muted);font-size:11px;font-family:inherit}.chart .lbl{fill:var(--ink);font-weight:700}
+.legend{display:flex;gap:1rem;font-size:.85rem;color:var(--muted);flex-wrap:wrap}.legend i{display:inline-block;width:12px;height:3px;margin-right:.35rem;vertical-align:middle}
+.facts{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.4rem}.facts span{display:block;font-size:.8rem;color:var(--muted)}
+.steps{display:flex;gap:.4rem;margin:.5rem 0}.steps span{flex:1;text-align:center;padding:.25rem;font-size:.82rem;border-radius:4px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.steps span.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand);font-weight:700}.steps span.past{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.empty{padding:1rem;text-align:center;color:var(--muted)}
+.login{max-width:460px;margin:0 auto;padding:2rem 1.1rem}.login>*+*{margin-top:1rem}
+.role{display:flex;gap:.7rem;border:2px solid var(--line);border-radius:8px;padding:.7rem .9rem;cursor:pointer;background:var(--surface);margin-top:.5rem}
+.role:has(input:checked){border-color:var(--brand);background:var(--info-bg)}.role:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.role input{margin-top:.3rem;accent-color:var(--brand);width:1.1rem;height:1.1rem}.role b{display:block}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(1rem + env(safe-area-inset-bottom,0px));background:#16262a;color:#fff;padding:.65rem 1rem;border-radius:8px;z-index:50;font-weight:700;display:none;max-width:92vw}
+#toast.show{display:block}#toast.err{background:#a3231a}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="toast" role="status" aria-live="polite"></div>
+<script>
+"use strict";
+/* ===== MVP data model (maps 1:1 to future PostgreSQL tables) =====
+ Patient{id,name,age,sex,location,pathway,weeks?,info}  Observation{id,patientId,type,value,unit,ts,source,symptoms[]}
+ Alert{id,patientId,level,issue,detail,rule,status}      Screening{id,patientId,answers[],ts,private}
+ Consultation{id,patientId,notes,rec,referral:{to,priority,status}|null}
+ All records: origin('hw'|'doctor') + sync('pending'|'syncing'|'synced') */
+const COLS=['patients','observations','alerts','screenings','consultations'];
+const NOW=Date.now(), ago=(d,h=0)=>new Date(NOW-d*864e5-h*36e5).toISOString();
+let _n=1000;const uid=p=>p+'-'+(++_n);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDT=i=>{const d=new Date(i);return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+', '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})};
+const fmtD=i=>new Date(i).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const OBS={bp:['Blood pressure','mmHg'],hr:['Heart rate','bpm'],spo2:['SpO₂','%'],temp:['Temperature','°C'],glu:['Glucose','mg/dL']};
+const PATH={maternal:'Maternal monitoring',chronic:'Chronic disease (older adult)',mental:'Mental-health screening'};
+const SYMS=['Severe headache','Swelling','Blurred vision','Dizziness','Fever','Shortness of breath'];
+const SQ=['Little interest in usual daily activities','Staying away from family and neighbours','Trouble sleeping','Worry that does not go away','Low energy through the day'];
+const SO=['Not at all','Several days','More than half the days','Nearly every day'];
+const DEST=['Tehsil Headquarter Hospital (THQ)','District Headquarter Hospital (DHQ)','Specialist facility','Mental-health professional'];
+const fmtObs=o=>o.type==='bp'?o.value.systolic+'/'+o.value.diastolic+' mmHg':o.type==='spo2'?o.value.value+' %':o.value.value+' '+o.unit;
+
+function seed(pre){
+  const db=Object.fromEntries(COLS.map(c=>[c,[]]));let pc=100;
+  const P=o=>{const p={id:'PT-0'+(++pc),origin:'hw',sync:'synced',createdAt:ago(20),info:'',...o};db.patients.push(p);return p};
+  const O=(p,type,value,ts,symptoms=[])=>db.observations.push({id:uid('OB'),patientId:p.id,type,value,unit:OBS[type][1],ts,source:'BP monitor',symptoms,origin:'hw',sync:'synced'});
+  const A=o=>db.alerts.push({id:uid('AL'),origin:'hw',sync:'synced',status:'open',ts:ago(0,1),...o});
+  const a=P({name:'Ahmed Khan',age:60,sex:'Male',location:'Chak 45/GB (demo)',pathway:'chronic',info:'Known hypertension (synthetic).'});
+  [[9,145,90],[5,155,95],[2,165,98],[0,175,105]].forEach(([d,s,di])=>O(a,'bp',{systolic:s,diastolic:di},ago(d)));
+  A({patientId:a.id,level:'review',issue:'Worsening BP trend',detail:'BP 145/90 → 155/95 → 165/98 → 175/105 mmHg over 10 days',rule:'Prototype rule: systolic ≥ 140 mmHg and rising across the last three readings.'});
+  const n=P({name:'Nadia Bibi',age:32,sex:'Female',location:'Remote village (demo)',pathway:'mental',info:'Family reports she is withdrawn, sleeps poorly and worries constantly. Has not seen a specialist.'});
+  const s=P({name:'Shabana Kausar',age:29,sex:'Female',location:'Chak 47/GB (demo)',pathway:'maternal',weeks:20});O(s,'bp',{systolic:112,diastolic:72},ago(0,3));O(s,'bp',{systolic:110,diastolic:70},ago(8));
+  const g=P({name:'Gulzar Begum',age:67,sex:'Female',location:'Chak 45/GB (demo)',pathway:'chronic'});O(g,'bp',{systolic:138,diastolic:86},ago(1));O(g,'glu',{value:142},ago(1));
+  const m=P({name:'Muhammad Aslam',age:52,sex:'Male',location:'Chak 46/GB (demo)',pathway:'chronic'});O(m,'glu',{value:168},ago(0,4));
+  if(pre){
+    const f=P({name:'Fatima Bibi',age:26,sex:'Female',location:'Chak 45/GB (demo)',pathway:'maternal',weeks:34});
+    O(f,'bp',{systolic:122,diastolic:78},ago(7));O(f,'bp',{systolic:160,diastolic:110},ago(0,0.4),['Severe headache','Swelling']);
+    A({patientId:f.id,level:'high',issue:'Abnormal BP + symptoms',detail:'BP 160/110 mmHg · Severe headache, Swelling',rule:'Prototype rule: systolic ≥ 160 or diastolic ≥ 110 mmHg.'});
+    db.screenings.push({id:uid('SC'),patientId:n.id,answers:[2,2,3,2,2],ts:ago(0,1),private:true,origin:'hw',sync:'synced'});
+    A({patientId:n.id,level:'private',issue:'Mental-health screening',detail:'Private screening completed.',rule:'Prototype rule: every completed screening goes for professional review.'});
+  }
+  return db;
+}
+const S={role:null,view:'home',id:null,conn:'online',db:seed(false),draft:{},last:null,pre:false,loginRole:'hw'};
+const resetDraft=()=>{S.draft={reg:{},obs:{type:'bp'},scr:{},rev:{}}};resetDraft();
+
+/* ---- data + sync layer (replace with API calls later) ---- */
+const vis=r=>r.origin===S.role||r.sync==='synced';
+const list=c=>S.db[c].filter(vis);
+const P=id=>S.db.patients.find(p=>p.id===id);
+const all=()=>COLS.flatMap(c=>S.db[c].map(r=>({c,r})));
+const mine=()=>all().filter(({r})=>r.origin===S.role&&r.sync!=='synced');
+const byTs=(a,b)=>b.ts.localeCompare(a.ts);
+function add(col,rec){rec.id=rec.id||uid({patients:'PT',observations:'OB',alerts:'AL',screenings:'SC',consultations:'CN'}[col]);rec.origin=S.role;rec.sync='pending';rec.ts=rec.ts||new Date().toISOString();S.db[col].push(rec);trySync();return rec}
+let timer=null;
+function trySync(){
+  if(S.conn==='offline')return;let any=false;
+  all().forEach(({r})=>{if(r.sync==='pending'){r.sync='syncing';any=true}});if(!any)return;
+  clearTimeout(timer);timer=setTimeout(()=>{let n=0;all().forEach(({r})=>{if(r.sync==='syncing'){r.sync='synced';n++}});timer=null;if(n)toast('Synced — '+n+' record'+(n>1?'s':'')+' sent.');render()},S.conn==='weak'?3200:900);
+}
+function setConn(c){
+  S.conn=c;
+  if(c==='offline'){clearTimeout(timer);timer=null;all().forEach(({r})=>{if(r.sync==='syncing')r.sync='pending'});toast('Offline — records will be saved on this device.')}
+  else{toast(all().some(({r})=>r.sync==='pending')?'Connection restored. Syncing…':'Online.');trySync()}
+  render();
+}
+let tt;function toast(m,e){const t=document.getElementById('toast');t.textContent=m;t.className='show'+(e?' err':'');clearTimeout(tt);tt=setTimeout(()=>t.className='',3200)}
+
+/* ---- rules (prototype only: flag for review, never diagnose) ---- */
+const obsOf=(pid,t)=>list('observations').filter(o=>o.patientId===pid&&(!t||o.type===t)).sort(byTs);
+function evaluate(p,o){
+  const v=o.value,sy=o.symptoms;let lvl=null,issue='',rule='',detail='';
+  if(o.type==='bp'){
+    const s=+v.systolic,d=+v.diastolic;detail='BP '+s+'/'+d+' mmHg'+(sy.length?' · '+sy.join(', '):'');
+    const h=S.db.observations.filter(x=>x.patientId===p.id&&x.type==='bp').sort((a,b)=>a.ts.localeCompare(b.ts)).slice(-3).map(x=>+x.value.systolic);
+    const rising=h.length===3&&h[0]<h[1]&&h[1]<h[2];
+    if(s>=160||d>=110){lvl='high';issue=sy.length?'Abnormal BP + symptoms':'Abnormal BP'+(rising?' + worsening trend':'');rule='Prototype rule: systolic ≥ 160 or diastolic ≥ 110 mmHg.'}
+    else if((s>=140||d>=90)&&p.pathway==='maternal'&&sy.length){lvl='high';issue='Abnormal BP + symptoms';rule='Prototype rule: BP ≥ 140/90 in pregnancy with symptoms.'}
+    else if((s>=140||d>=90)&&rising){lvl='review';issue='Worsening BP trend';rule='Prototype rule: systolic ≥ 140 and rising across the last three readings.'}
+  }else if(o.type==='spo2'&&+v.value<92){lvl='high';issue='Low SpO₂';detail='SpO₂ '+v.value+' %';rule='Prototype rule: SpO₂ below 92 %.'}
+  else if(o.type==='glu'&&(+v.value>=250||+v.value<70)){lvl='review';issue='Abnormal glucose';detail='Glucose '+v.value+' mg/dL';rule='Prototype rule: glucose ≥ 250 or < 70 mg/dL.'}
+  else if(o.type==='temp'&&+v.value>=38.5){lvl='review';issue='High temperature';detail='Temperature '+v.value+' °C';rule='Prototype rule: temperature ≥ 38.5 °C.'}
+  else if(o.type==='hr'&&(+v.value>120||+v.value<50)){lvl='review';issue='Abnormal heart rate';detail='Heart rate '+v.value+' bpm';rule='Prototype rule: heart rate above 120 or below 50 bpm.'}
+  return lvl?{patientId:p.id,level:lvl,issue,detail,rule,status:'open'}:null;
+}
+function status(p){
+  const al=list('alerts').filter(a=>a.patientId===p.id&&a.status==='open');
+  if(al.some(a=>a.level==='high'))return['bad',S.role==='doctor'?'High review':'Review required'];
+  if(al.some(a=>a.level==='private'))return['priv','Private review'];
+  if(al.length)return['warn','Alert'];
+  if(p.pathway==='mental'&&!list('screenings').some(s=>s.patientId===p.id))return['info','Screening pending'];
+  return['ok','Normal'];
+}
+
+/* ---- components ---- */
+const badge=(c,t)=>`<span class="badge ${c}">${t}</span>`;
+const SyncBadge=r=>r.sync==='synced'?badge('ok','Synced'):r.sync==='syncing'?badge('info','Syncing…'):badge('warn','Pending sync');
+const StatusBadge=p=>badge(...status(p));
+const Kpi=(l,v,c='')=>`<div class="kpi ${c}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+function AlertCard(a){
+  const p=P(a.patientId);if(!p)return'';const doc=S.role==='doctor',open=a.status==='open';
+  const lb=!open?badge('ok','Reviewed'):a.level==='high'?badge('bad','High review'):a.level==='private'?badge('priv','Private'):badge('warn','Review');
+  const act=!open?'':doc?`<button class="btn primary sm" data-a="go" data-v="review" data-id="${p.id}">Review case</button>`
+    :`<button class="btn primary sm" data-a="go" data-v="patient" data-id="${p.id}">View patient</button>`;
+  return `<article class="alert ${open?a.level:'done'}"><div class="row between"><div><b>${esc(p.name)}</b> <span class="muted small">${p.id} · ${p.age} y</span></div><div class="row">${lb}${SyncBadge(a)}</div></div>
+   <div style="font-weight:700;margin-top:.3rem">${a.level==='high'?'High-risk observation':a.level==='private'?'Private screening completed':'Abnormal pattern'} — professional review required</div>
+   <div>${a.level==='private'&&!doc?'Details are private to authorized users.':esc(a.detail)}</div>
+   <div class="why">Why flagged: ${esc(a.rule)} This is not a diagnosis. The doctor makes the clinical decision.</div>
+   ${act?`<div class="row" style="margin-top:.6rem">${act}</div>`:''}</article>`;
+}
+function Trend(pid){
+  const bp=obsOf(pid,'bp').slice().reverse();
+  if(bp.length<2)return`<div class="empty">A trend needs at least two BP readings.</div>`;
+  const W=560,H=190,pl=40,pr=16,pt=16,pb=30,xs=bp.map(o=>fmtD(o.ts));
+  const ys=bp.flatMap(o=>[+o.value.systolic,+o.value.diastolic,140]);const lo=Math.floor(Math.min(...ys)/10)*10-10,hi=Math.ceil(Math.max(...ys)/10)*10+10;
+  const X=i=>pl+i*(W-pl-pr)/(xs.length-1),Y=v=>pt+(hi-v)*(H-pt-pb)/(hi-lo);
+  let g=[0,1,2,3].map(i=>Math.round(lo+(hi-lo)*i/3)).map(t=>`<line x1="${pl}" x2="${W-pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${pl-6}" y="${Y(t)+4}" text-anchor="end">${t}</text>`).join('');
+  g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(140)}" y2="${Y(140)}" stroke="var(--warn)" stroke-dasharray="5 4"/>`;
+  g+=xs.map((x,i)=>`<text x="${X(i)}" y="${H-8}" text-anchor="middle">${x}</text>`).join('');
+  [['systolic','var(--brand)'],['diastolic','var(--info)']].forEach(([k,c])=>{g+=`<polyline fill="none" stroke="${c}" stroke-width="2.5" points="${bp.map((o,i)=>X(i)+','+Y(+o.value[k])).join(' ')}"/>`+bp.map((o,i)=>`<circle cx="${X(i)}" cy="${Y(+o.value[k])}" r="4" fill="${c}"/><text class="lbl" x="${X(i)}" y="${Y(+o.value[k])-9}" text-anchor="middle">${o.value[k]}</text>`).join('')});
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Blood pressure trend">${g}</svg><div class="legend"><span><i style="background:var(--brand)"></i>Systolic</span><span><i style="background:var(--info)"></i>Diastolic</span><span><i style="background:var(--warn)"></i>Review threshold (140)</span></div></div>`;
+}
+function Vitals(pid){return`<div class="vitals">${Object.keys(OBS).map(t=>{const o=obsOf(pid,t)[0];const f=o&&((t==='bp'&&(o.value.systolic>=160||o.value.diastolic>=110))||(t==='spo2'&&o.value.value<92));
+  return`<div class="vital ${f?'flag':''}"><div class="t">${OBS[t][0]}</div><div class="v">${o?esc(t==='bp'?o.value.systolic+'/'+o.value.diastolic:o.value.value):'—'} <span class="small muted">${OBS[t][1]}</span></div><div class="m">${o?fmtDT(o.ts):'No reading'}</div></div>`}).join('')}</div>`}
+function PatientTable(pts){
+  if(!pts.length)return`<div class="empty">No patients yet. Register a patient to begin.</div>`;
+  return`<div class="tw"><table><thead><tr><th>Patient</th><th>Age</th><th>Last observation</th><th>Status</th><th>Sync</th></tr></thead><tbody>${pts.map(p=>{const o=obsOf(p.id)[0];return`<tr class="click" tabindex="0" data-a="go" data-v="${S.role==='doctor'?'review':'patient'}" data-id="${p.id}"><td><b>${esc(p.name)}</b><div class="muted small">${p.id}</div></td><td>${p.age}</td><td>${o?esc(OBS[o.type][0].replace('Blood pressure','BP'))+' '+esc(fmtObs(o)):p.pathway==='mental'?(list('screenings').some(s=>s.patientId===p.id)?'Screening':'—'):'—'}</td><td>${StatusBadge(p)}</td><td>${SyncBadge(p)}</td></tr>`}).join('')}</tbody></table></div>`}
+
+const fv=(f,n,d='')=>(S.draft[f]&&S.draft[f][n]!==undefined)?S.draft[f][n]:d;
+const inp=(f,n,l,o={})=>`<label class="fld ${o.cls||''}"><span>${l}</span><input data-f="${f}.${n}" type="${o.type||'text'}" value="${esc(fv(f,n,o.def||''))}" ${o.attrs||''} ${o.ph?`placeholder="${esc(o.ph)}"`:''}></label>`;
+const sel=(f,n,l,opts,o={})=>`<label class="fld ${o.cls||''}"><span>${l}</span><select data-f="${f}.${n}">${opts.map(x=>{const[v,t]=Array.isArray(x)?x:[x,x];return`<option value="${esc(v)}" ${String(fv(f,n,o.def||''))===String(v)?'selected':''}>${esc(t)}</option>`}).join('')}</select></label>`;
+const head=(t,s,r='')=>`<div class="row between"><div><h1>${t}</h1>${s?`<p class="muted">${s}</p>`:''}</div><div class="row">${r}</div></div>`;
+
+/* ---- screens ---- */
+function VLogin(){return`<div class="login"><div><h1>Pak-Tele-Health</h1><p class="muted">MVP prototype. Rural healthcare worker collects, remote doctor reviews. Demo login, synthetic data.</p></div>
+ <fieldset style="border:0;padding:0;margin:0"><label class="role"><input type="radio" name="role" value="hw" ${S.loginRole==='hw'?'checked':''}><span><b>Healthcare worker</b><span class="muted small">Registers patients, records observations.</span></span></label>
+ <label class="role"><input type="radio" name="role" value="doctor" ${S.loginRole==='doctor'?'checked':''}><span><b>Doctor / specialist</b><span class="muted small">Reviews alerts, history, writes consultation and referral.</span></span></label></fieldset>
+ <label class="chip"><input type="checkbox" id="pre" ${S.pre?'checked':''}> Pre-load Fatima and Nadia as already flagged</label>
+ <button class="btn primary" data-a="login" style="width:100%;justify-content:center">Log in</button></div>`}
+
+function VHome(){
+  const pts=list('patients'),al=list('alerts').filter(a=>a.status==='open'),q=mine();
+  if(S.role==='doctor'){
+    const wait=all().filter(({r})=>r.origin==='hw'&&r.sync!=='synced').length;
+    return`${head('Doctor dashboard','Remote review')}
+    ${wait?`<div class="note warn">${wait} field record${wait>1?'s are':' is'} saved offline and not visible yet. They appear after the healthcare worker’s device syncs.</div>`:''}
+    <div class="kpis">${Kpi('Patients assigned',pts.length)}${Kpi('Active alerts',al.length,al.length?'bad':'')}${Kpi('Pending referrals',list('consultations').filter(c=>c.referral&&c.referral.status==='Pending').length,'warn')}</div>
+    <section class="card"><h2>Alerts to review</h2>${al.length?`<div class="tw"><table><thead><tr><th>Patient</th><th>Issue</th><th>Status</th><th>Action</th></tr></thead><tbody>${al.sort(byTs).map(a=>{const p=P(a.patientId);return`<tr><td><b>${esc(p.name)}</b><div class="muted small">${p.id} · ${p.age} y</div></td><td>${esc(a.issue)}</td><td>${a.level==='high'?badge('bad','High review'):a.level==='private'?badge('priv','Private'):badge('warn','Review')}</td><td><button class="btn primary sm" data-a="go" data-v="review" data-id="${p.id}">Review case</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">No open alerts. Flagged cases appear here once synced.</div>'}</section>
+    <section class="card"><h2>All patients</h2>${PatientTable(pts)}</section>`;
+  }
+  return`${head('Healthcare worker dashboard','BHU Chak 45/GB (demo facility)')}
+  <div class="row"><button class="btn primary" data-a="go" data-v="register">+ Register patient</button><button class="btn" data-a="go" data-v="record">Record observation</button></div>
+  <div class="kpis">${Kpi('Patients',pts.length)}${Kpi('Pending sync',q.length,q.length?'warn':'')}${Kpi('Active alerts',al.length,al.length?'bad':'')}</div>
+  ${al.length?`<section style="display:grid;gap:.7rem"><h2>Needs professional review</h2>${al.map(AlertCard).join('')}</section>`:''}
+  <section class="card"><h2>Recent patients</h2>${PatientTable(pts.slice().sort((a,b)=>((obsOf(b.id)[0]||{ts:b.createdAt}).ts).localeCompare((obsOf(a.id)[0]||{ts:a.createdAt}).ts)))}</section>
+  <section class="card"><h2>Pending sync</h2>${q.length?`<div class="tw"><table><thead><tr><th>Record</th><th>Saved</th><th>Status</th></tr></thead><tbody>${q.map(({c,r})=>`<tr><td>${esc(c==='patients'?'Patient: '+r.name:c==='observations'?'Observation: '+OBS[r.type][0]+' '+fmtObs(r):c==='alerts'?'Alert: '+r.issue:c==='screenings'?'Private screening':'Consultation')}</td><td>${fmtDT(r.ts)}</td><td>${SyncBadge(r)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Everything is synced. Switch to Offline above, then save a record to see it queue here.</div>'}</section>`;
+}
+
+function VRegister(){
+  if(S.last&&S.last.k==='reg'){const p=P(S.last.id);return`${head('Register patient')}<div class="card" style="display:grid;gap:.8rem"><div class="note ok"><b>Patient successfully registered.</b> ${esc(p.name)} (${p.id}) ${SyncBadge(p)}</div><div class="row"><button class="btn primary" data-a="go" data-v="record" data-id="${p.id}">Record observation</button><button class="btn" data-a="go" data-v="patient" data-id="${p.id}">View patient</button></div></div>`}
+  const mat=fv('reg','pathway','maternal')==='maternal';
+  return`${head('Register patient','Only what the pilot needs.','<button class="btn ghost sm" data-a="fillReg">Fill demo example (Fatima Bibi)</button>')}
+  <form class="card" onsubmit="return false"><div class="form">${inp('reg','name','Name / identifier')}${inp('reg','age','Age (years)',{type:'number',attrs:'inputmode="numeric"'})}${sel('reg','sex','Sex',[['','Select'],'Female','Male'])}${inp('reg','location','Location')}
+  ${sel('reg','pathway','Care pathway',[['maternal',PATH.maternal],['chronic',PATH.chronic],['mental',PATH.mental]],{def:'maternal'})}${mat?inp('reg','weeks','Pregnancy (weeks)',{type:'number'}):''}
+  <label class="fld wide"><span>Relevant medical information</span><textarea data-f="reg.info">${esc(fv('reg','info'))}</textarea></label></div>
+  <div class="row" style="margin-top:1rem"><button class="btn primary" data-a="saveReg">Save patient</button></div></form>`;
+}
+
+function VRecord(){
+  const f=S.draft.obs,t=f.type||'bp',pts=list('patients');
+  if(S.last&&S.last.k==='obs'){const o=S.db.observations.find(x=>x.id===S.last.id),a=S.db.alerts.find(x=>x.id===S.last.al),p=P(o.patientId);
+    return`${head('Record observation')}<div style="display:grid;gap:.8rem"><div class="note ok"><b>Saved</b> for ${esc(p.name)}: ${esc(OBS[o.type][0])} ${esc(fmtObs(o))} ${SyncBadge(o)}${S.conn==='offline'?'<div>Offline — records will be saved and synchronized when connection returns.</div>':''}</div>
+    ${a?AlertCard(a):'<div class="note">No prototype rule was triggered.</div>'}
+    <div class="row"><button class="btn" data-a="again">Record another</button>${p.pathway==='mental'?`<button class="btn primary" data-a="go" data-v="screen" data-id="${p.id}">Private screening</button>`:''}<button class="btn ghost" data-a="go" data-v="patient" data-id="${p.id}">View patient</button></div></div>`}
+  const fields={bp:inp('obs','sys','Systolic (mmHg)',{type:'number'})+inp('obs','dia','Diastolic (mmHg)',{type:'number'}),hr:inp('obs','val','Heart rate (bpm)',{type:'number'}),spo2:inp('obs','val','SpO₂ (%)',{type:'number'}),temp:inp('obs','val','Temperature (°C)',{type:'number',attrs:'step="0.1"'}),glu:inp('obs','val','Glucose (mg/dL)',{type:'number'})}[t];
+  return`${head('Record observation','Vitals and symptoms taken at the rural healthcare point.')}
+  <form class="card" onsubmit="return false"><div class="form">
+   ${sel('obs','pid','Patient',[['','Select a patient'],...pts.map(p=>[p.id,p.name+' · '+p.id])],{cls:'wide'})}
+   <div class="fld wide"><span>Observation type</span><div class="seg light" role="group">${Object.keys(OBS).map(k=>`<button data-a="otype" data-v="${k}" aria-pressed="${t===k}">${OBS[k][0]}</button>`).join('')}</div></div>
+   ${fields}${sel('obs','source','Source',['Healthcare worker','BP monitor','Pulse oximeter','Manual entry'])}
+   <fieldset class="fld wide" style="border:0;padding:0;margin:0"><legend style="font-weight:700;margin-bottom:.4rem">Symptoms (optional)</legend><div class="chips">${SYMS.map((s,i)=>`<label class="chip"><input type="checkbox" data-f="obs.sy${i}" ${fv('obs','sy'+i,false)?'checked':''}>${s}</label>`).join('')}</div></fieldset></div>
+  <div class="row" style="margin-top:1rem"><button class="btn primary" data-a="saveObs">Save observation</button><button class="btn ghost" data-a="demoObs">Use demo reading</button></div></form>`;
+}
+
+function VScreen(){
+  const p=P(S.id);
+  if(S.last&&S.last.k==='scr')return`${head('Private screening')}<div style="display:grid;gap:.8rem"><div class="note priv"><b>Responses saved privately.</b> Only authorized users can see them.</div><div class="card"><h2>Professional review required</h2><p class="muted">No result or diagnosis is shown. A mental-health professional reviews the responses.</p><div class="row" style="margin-top:.8rem"><button class="btn primary" data-a="counsel" data-id="${p.id}">Request counselling</button><button class="btn" data-a="refMH" data-id="${p.id}">Refer to mental-health professional</button><button class="btn ghost" data-a="go" data-v="patient" data-id="${p.id}">Back to patient</button></div></div></div>`;
+  return`${head('Private screening',esc(p.name)+' · '+p.id)}
+  <div class="note priv"><b>Mental-health information is private and only available to authorized users.</b> A family member does not automatically see it. Complete this with the patient alone.</div>
+  <div class="note warn">Demo questions only. The validated screening instrument will be confirmed with the supervisor.</div>
+  <form style="display:grid;gap:.8rem" onsubmit="return false">${SQ.map((q,i)=>`<fieldset class="q"><legend>${q}</legend><div class="chips">${SO.map((o,j)=>`<label class="chip"><input type="radio" name="q${i}" data-f="scr.q${i}" value="${j}" ${String(fv('scr','q'+i,''))===String(j)?'checked':''}>${o}</label>`).join('')}</div></fieldset>`).join('')}
+  <div class="row"><button class="btn primary" data-a="saveScr" data-id="${p.id}">Save private screening</button></div></form>`;
+}
+
+function Consults(pid){
+  const cs=list('consultations').filter(c=>c.patientId===pid).sort(byTs);
+  return cs.length?cs.map(c=>{const r=c.referral,i=r?['Pending','Accepted','Completed'].indexOf(r.status):-1;
+    return`<div style="padding:.6rem 0;border-top:1px solid var(--line)"><div class="row between"><b>${c.kind==='counselling'?'Counselling request':'Consultation'} · ${fmtDT(c.ts)}</b>${SyncBadge(c)}</div>
+    ${c.notes?`<p>${esc(c.notes)}</p>`:''}${c.rec?`<p class="small"><b>Recommendation:</b> ${esc(c.rec)}</p>`:''}
+    ${r?`<p class="small" style="margin-top:.4rem"><b>Referral:</b> Rural Healthcare Point / BHU → ${esc(r.to)} · ${r.priority} priority</p><div class="steps">${['Pending','Accepted','Completed'].map((s,k)=>`<span class="${k<i?'past':k===i?'on':''}">${s}</span>`).join('')}</div>${S.role==='doctor'&&i<2?`<button class="btn sm primary" data-a="advRef" data-id="${c.id}">${i===0?'Mark accepted':'Mark completed'}</button>`:''}`:''}</div>`}).join(''):'<div class="empty">No consultations or referrals yet.</div>';
+}
+function VPatient(){
+  const p=P(S.id);if(!p||!vis(p))return'<div class="empty">Patient not found.</div>';
+  const doc=S.role==='doctor',al=list('alerts').filter(a=>a.patientId===p.id).sort(byTs),sy=obsOf(p.id).filter(o=>o.symptoms.length)[0],sc=list('screenings').filter(s=>s.patientId===p.id).sort(byTs)[0];
+  return`<div class="card"><div class="row between"><div><div class="row"><h1>${esc(p.name)}</h1>${StatusBadge(p)}${SyncBadge(p)}</div>
+   <div class="facts"><div><span>Patient ID</span><b>${p.id}</b></div><div><span>Age</span><b>${p.age}</b></div><div><span>Sex</span><b>${p.sex}</b></div><div><span>Location</span><b>${esc(p.location)}</b></div>${p.weeks?`<div><span>Pregnancy</span><b>${p.weeks} weeks</b></div>`:''}</div></div>
+   <div class="row">${doc?`<button class="btn primary" data-a="go" data-v="review" data-id="${p.id}">Review case</button>`:`<button class="btn primary" data-a="go" data-v="record" data-id="${p.id}">Record observation</button>${p.pathway==='mental'?`<button class="btn" data-a="go" data-v="screen" data-id="${p.id}">Private screening</button>`:''}`}</div></div>
+   ${p.info?`<p class="small muted" style="margin-top:.6rem">${esc(p.info)}</p>`:''}</div>
+  ${al.length?`<section style="display:grid;gap:.7rem">${al.map(AlertCard).join('')}</section>`:''}
+  <section class="card"><h2>Current readings</h2>${Vitals(p.id)}${sy?`<p class="small" style="margin-top:.7rem"><b>Symptoms (${fmtDT(sy.ts)}):</b> ${sy.symptoms.map(esc).join(', ')}</p>`:''}</section>
+  <section class="card"><h2>Historical readings</h2>${Trend(p.id)}</section>
+  ${p.pathway==='mental'?`<section class="card"><h2>Private screening</h2><div class="note priv">Mental-health information is private and only available to authorized users.</div>${sc?`<div style="margin-top:.7rem">${SQ.map((q,i)=>`<div class="row between" style="padding:.35rem 0;border-bottom:1px solid var(--line)"><span>${q}</span><b>${SO[sc.answers[i]]}</b></div>`).join('')}</div><p class="small muted" style="margin-top:.5rem">Demo questions only. Completed ${fmtDT(sc.ts)}.</p>`:'<p class="muted" style="margin-top:.6rem">No screening completed yet.</p>'}</section>`:''}
+  <section class="card"><h2>Consultations and referral</h2>${Consults(p.id)}</section>`;
+}
+
+function VReview(){
+  const p=P(S.id);if(!p)return'';const al=list('alerts').filter(a=>a.patientId===p.id&&a.status==='open'),f=S.draft.rev,rr=fv('rev','refReq',false);
+  return`${head('Review case',esc(p.name)+' · '+p.id+' · '+p.age+' y · '+p.sex)}
+  ${al.map(AlertCard).join('')}
+  <section class="card"><h2>Current readings</h2>${Vitals(p.id)}</section>
+  <section class="card"><h2>History</h2>${Trend(p.id)}</section>
+  <form class="card" onsubmit="return false"><h2>Consultation</h2><div class="form">
+   <label class="fld wide"><span>Doctor notes</span><textarea data-f="rev.notes" placeholder="Clinical notes entered by the doctor">${esc(fv('rev','notes'))}</textarea></label>
+   ${sel('rev','rec','Recommendation / follow-up',['Continue monitoring','Follow-up in 3 days','Follow-up in 1 week','Refer to higher-level facility'],{def:'Follow-up in 3 days'})}
+   <label class="fld"><span>Referral required?</span><label class="chip"><input type="checkbox" data-f="rev.refReq" ${rr?'checked':''}> Yes, create referral</label></label>
+   ${rr?sel('rev','to','Refer to',DEST,{def:p.pathway==='mental'?DEST[3]:DEST[0]})+sel('rev','pri','Priority',['High','Medium','Routine'],{def:al.some(a=>a.level==='high')?'High':'Medium'}):''}</div>
+   <div class="row" style="margin-top:1rem"><button class="btn primary" data-a="saveRev" data-id="${p.id}">Save consultation</button><button class="btn ghost" data-a="go" data-v="patient" data-id="${p.id}">View full patient record</button></div>
+   <p class="small muted" style="margin-top:.6rem">No automatic diagnosis is shown. Video calling is out of scope for the MVP.</p></form>
+  <section class="card"><h2>Previous consultations and referral</h2>${Consults(p.id)}</section>`;
+}
+
+function Shell(){
+  const hw=S.role==='hw',nav=hw?[['home','Dashboard'],['register','Register'],['record','Record']]:[['home','Dashboard']];
+  const cur={patient:'',screen:'record',review:''}[S.view]!==undefined?{patient:'',screen:'record',review:''}[S.view]:S.view;
+  const syncing=all().some(({r})=>r.sync==='syncing'),pend=mine().length;
+  const banner=S.conn==='offline'?'<div class="banner offline" role="status">Offline — Records will be saved and synchronized when connection returns.</div>':S.conn==='weak'?'<div class="banner weak" role="status">Weak connection — records sync slowly.</div>':syncing?'<div class="banner sync" role="status">Syncing…</div>':'';
+  const V={home:VHome,register:VRegister,record:VRecord,screen:VScreen,patient:VPatient,review:VReview}[S.view]||VHome;
+  return`<header class="top"><div class="nav"><b style="margin-right:.6rem">Pak-Tele-Health</b>${nav.map(([k,l])=>`<button data-a="go" data-v="${k}" ${cur===k?'aria-current="page"':''}>${l}</button>`).join('')}</div>
+   <div class="conn"><span><span class="dot ${S.conn}"></span> <b>${S.conn==='offline'?'Offline':S.conn==='weak'?'Weak connection':syncing?'Online — syncing…':'Online'}</b></span>${pend?badge(syncing?'info':'warn',pend+' pending'):''}
+   <span class="seg" role="group" aria-label="Simulate connection">${[['online','Online'],['weak','Weak'],['offline','Offline']].map(([k,l])=>`<button data-a="conn" data-v="${k}" aria-pressed="${S.conn===k}">${l}</button>`).join('')}</span>
+   <span class="small">${hw?'Healthcare worker':'Doctor'}</span><button class="btn sm ghost" style="color:#fff;border-color:rgba(255,255,255,.4)" data-a="logout">Log out</button></div></header>${banner}<main class="page">${V()}</main>`;
+}
+function render(){const a=document.getElementById('app'),ae=document.activeElement,k=ae&&ae.dataset&&ae.dataset.f;const y=window.scrollY;a.innerHTML=S.role?Shell():VLogin();
+  if(k){const e=a.querySelector(`[data-f="${k}"]`);if(e&&e.tagName==='INPUT'&&!['checkbox','radio'].includes(e.type)){e.focus()}}if(S.keep)window.scrollTo(0,y)}
+function go(v,id){S.view=v;S.id=id||null;if(v==='record'){S.last=null;if(id)S.draft.obs.pid=id}if(v==='register')S.last=null;if(v==='screen'){S.last=null;S.draft.scr={}}if(v==='review')S.draft.rev={};S.keep=false;render();window.scrollTo(0,0)}
+
+/* ---- actions ---- */
+const need=(c,m)=>{if(!c){toast(m,true);return true}return false};
+const A={
+  go:d=>go(d.v,d.id),
+  login:()=>{S.role=document.querySelector('input[name=role]:checked').value;S.pre=document.getElementById('pre').checked;S.db=seed(S.pre);resetDraft();S.last=null;go('home')},
+  logout:()=>{S.role=null;render()},
+  conn:d=>setConn(d.v),
+  otype:d=>{S.draft.obs.type=d.v;S.keep=true;render()},
+  again:()=>{const p=S.draft.obs.pid;S.last=null;S.draft.obs={type:'bp',pid:p};render()},
+  fillReg:()=>{S.draft.reg={name:'Fatima Bibi',age:'26',sex:'Female',location:'Chak 45/GB (demo)',pathway:'maternal',weeks:'34',info:'First pregnancy; antenatal visits regular.'};S.keep=true;render()},
+  saveReg:()=>{const f=S.draft.reg;if(need(f.name&&f.name.trim(),'Enter the patient’s name.')||need(f.age>0,'Enter the patient’s age.')||need(f.sex,'Select the sex.')||need(f.location&&f.location.trim(),'Enter the location.'))return;
+    const id='PT-0'+(Math.max(100,...S.db.patients.map(p=>parseInt(p.id.slice(3),10)))+1),pw=f.pathway||'maternal';
+    add('patients',{id,name:f.name.trim(),age:+f.age,sex:f.sex,location:f.location.trim(),pathway:pw,weeks:pw==='maternal'&&f.weeks?+f.weeks:null,info:f.info||'',createdAt:new Date().toISOString()});
+    S.last={k:'reg',id};toast('Patient successfully registered.');render();window.scrollTo(0,0)},
+  demoObs:()=>{const p=P(S.draft.obs.pid);if(need(p,'Select a patient first.'))return;S.draft.obs=p.pathway==='maternal'?{type:'bp',pid:p.id,sys:'160',dia:'110',sy0:true,sy1:true}:{type:'bp',pid:p.id,sys:'182',dia:'108'};S.keep=true;render()},
+  saveObs:()=>{const f=S.draft.obs,p=P(f.pid),t=f.type||'bp';if(need(p,'Select a patient.'))return;let value;
+    if(t==='bp'){if(need(f.sys>0&&f.dia>0,'Enter systolic and diastolic values.'))return;value={systolic:+f.sys,diastolic:+f.dia}}else{if(need(f.val>0,'Enter a value.'))return;value={value:+f.val}}
+    const o=add('observations',{patientId:p.id,type:t,value,unit:OBS[t][1],source:f.source||'Healthcare worker',symptoms:SYMS.filter((_,i)=>f['sy'+i])});
+    const r=evaluate(p,o);const a=r?add('alerts',r):null;S.last={k:'obs',id:o.id,al:a?a.id:null};toast(S.conn==='offline'?'Saved offline — pending sync.':'Observation saved.');render();window.scrollTo(0,0)},
+  saveScr:d=>{const f=S.draft.scr;if(need(SQ.every((_,i)=>f['q'+i]!==undefined),'Answer every question.'))return;
+    add('screenings',{patientId:d.id,answers:SQ.map((_,i)=>+f['q'+i]),private:true});
+    add('alerts',{patientId:d.id,level:'private',issue:'Mental-health screening',detail:'Private screening completed.',rule:'Prototype rule: every completed screening goes for professional review.',status:'open'});
+    S.last={k:'scr'};toast(S.conn==='offline'?'Saved offline — pending sync.':'Private screening saved.');render();window.scrollTo(0,0)},
+  counsel:d=>{add('consultations',{patientId:d.id,kind:'counselling',notes:'',rec:'Counselling requested',referral:null});toast('Counselling requested.');go('patient',d.id)},
+  refMH:d=>{add('consultations',{patientId:d.id,kind:'consultation',notes:'',rec:'Referred by healthcare worker',referral:{to:DEST[3],priority:'Medium',status:'Pending'}});toast('Referral created — status Pending.');go('patient',d.id)},
+  saveRev:d=>{const f=S.draft.rev;if(need(f.notes&&f.notes.trim(),'Enter the doctor’s notes.'))return;const p=P(d.id);
+    const rec=f.rec||'Follow-up in 3 days',ref=f.refReq?{to:f.to||(p.pathway==='mental'?DEST[3]:DEST[0]),priority:f.pri||'Medium',status:'Pending'}:null;
+    add('consultations',{patientId:d.id,kind:'consultation',notes:f.notes.trim(),rec,referral:ref});
+    S.db.alerts.filter(a=>a.patientId===d.id&&a.status==='open').forEach(a=>a.status='reviewed');
+    toast(ref?'Consultation saved. Referral created.':'Consultation saved.');go('patient',d.id)},
+  advRef:d=>{const c=S.db.consultations.find(x=>x.id===d.id),st=['Pending','Accepted','Completed'];c.referral.status=st[Math.min(2,st.indexOf(c.referral.status)+1)];S.keep=true;toast('Referral '+c.referral.status.toLowerCase()+'.');render()}
+};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;if(t.tagName==='TR'&&e.target.closest('button')&&e.target.closest('button')!==t)return;A[t.dataset.a]&&A[t.dataset.a](t.dataset)});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='TR'&&e.target.dataset.a)A[e.target.dataset.a](e.target.dataset)});
+document.addEventListener('input',e=>{const t=e.target;if(t.name==='role'){S.loginRole=t.value;return}const f=t.dataset.f;if(!f)return;
+  const[form,name]=f.split('.');(S.draft[form]=S.draft[form]||{})[name]=t.type==='checkbox'?t.checked:t.value;
+  if(f==='reg.pathway'||f==='obs.pid'||f==='rev.refReq'){S.keep=true;render()}});
+render();
+</script>
+</body>
+</html>
