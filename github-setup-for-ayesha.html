@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Repo Setup — Instructions for Ayesha</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:#f6f8fa;color:#1f2328;line-height:1.7;padding:0}
+.top{background:#24292f;color:#fff;padding:1.5rem 2rem}
+.top h1{font-size:1.4rem}
+.top p{opacity:.8;font-size:.9rem;margin-top:.3rem}
+.container{max-width:750px;margin:0 auto;padding:1.5rem}
+.step{background:#fff;border:1px solid #d1d9e0;border-radius:8px;margin-bottom:1.2rem;overflow:hidden}
+.step-header{padding:.8rem 1rem;background:#f6f8fa;border-bottom:1px solid #d1d9e0;display:flex;align-items:center;gap:.6rem}
+.step-num{background:#0969da;color:#fff;width:1.8rem;height:1.8rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0}
+.step-title{font-weight:700;font-size:1rem}
+.step-body{padding:1rem 1.2rem}
+.step-body>*+*{margin-top:.7rem}
+.step-body img{max-width:100%;border:1px solid #d1d9e0;border-radius:6px}
+ol{padding-left:1.4rem}
+li{margin:.4rem 0}
+code{background:#eff1f3;padding:.15rem .4rem;border-radius:4px;font-size:.88rem;font-family:Consolas,monospace}
+.highlight{background:#fff8c5;border:1px solid #d4a72c;border-radius:6px;padding:.6rem .8rem;font-size:.9rem}
+.warn{background:#ffebe9;border:1px solid #d1242f;border-radius:6px;padding:.6rem .8rem;font-size:.9rem;color:#82071e;font-weight:600}
+.ok{background:#dafbe1;border:1px solid #1a7f37;border-radius:6px;padding:.6rem .8rem;font-size:.9rem;color:#116329}
+.path{background:#24292f;color:#7ee787;padding:.5rem .8rem;border-radius:6px;font-family:monospace;font-size:.9rem;display:block;margin:.4rem 0}
+p+p{margin-top:.5rem}
+h3{font-size:.92rem;color:#0969da;margin-top:.8rem;margin-bottom:.2rem}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>GitHub Repo Setup — For Ayesha</h1>
+  <p>Follow these steps on github.com to create the repo and share access.</p>
+</div>
+
+<div class="container">
+
+<div class="warn">
+  ⚠️ <strong>Security note:</strong> Never share your GitHub password with anyone. These instructions use a Personal Access Token instead — it's safer, limited, and you can revoke it anytime.
+</div>
+
+<!-- Part 1: Create Repo -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <div class="step-title">Create a New Repository</div>
+  </div>
+  <div class="step-body">
+    <ol>
+      <li>Go to <a href="https://github.com" target="_blank"><strong>github.com</strong></a> and sign in</li>
+      <li>Click the <strong>+</strong> icon (top-right corner) → <strong>"New repository"</strong></li>
+      <li>Fill in:
+        <ul>
+          <li><strong>Repository name:</strong> <code>pak-tele-health</code></li>
+          <li><strong>Description:</strong> <code>Rural telehealth MVP — healthcare worker collects, doctor reviews</code></li>
+          <li><strong>Visibility:</strong> Choose <strong>Private</strong> (or Public, your choice)</li>
+          <li><strong>DO NOT</strong> check "Add a README file"</li>
+          <li><strong>DO NOT</strong> add .gitignore or license (we already have them in the code)</li>
+        </ul>
+      </li>
+      <li>Click <strong>"Create repository"</strong></li>
+    </ol>
+
+    <div class="highlight">
+      After creating, you'll see a page with setup instructions. <strong>Copy the repo URL</strong> — it looks like:<br>
+      <span class="path">https://github.com/ayeshashafqat01/pak-tele-health.git</span>
+      (Your actual username may be different — copy whatever GitHub shows.)
+    </div>
+  </div>
+</div>
+
+<!-- Part 2: Create PAT -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">2</div>
+    <div class="step-title">Create a Personal Access Token (PAT)</div>
+  </div>
+  <div class="step-body">
+    <p>This token lets someone push code to your repo without needing your password.</p>
+
+    <ol>
+      <li>Go to: <a href="https://github.com/settings/tokens?type=beta" target="_blank"><strong>github.com/settings/tokens</strong></a>
+        <br><small>(Or: Click your profile picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens)</small>
+      </li>
+      <li>Click <strong>"Generate new token"</strong></li>
+      <li>Fill in:
+        <ul>
+          <li><strong>Token name:</strong> <code>pak-tele-health-push</code></li>
+          <li><strong>Expiration:</strong> <strong>30 days</strong> (or 7 days if you want shorter)</li>
+          <li><strong>Repository access:</strong> Select <strong>"Only select repositories"</strong> → choose <strong>pak-tele-health</strong></li>
+        </ul>
+      </li>
+      <li>Under <strong>"Permissions"</strong> → <strong>Repository permissions</strong>:
+        <ul>
+          <li><strong>Contents:</strong> set to <strong>Read and write</strong></li>
+          <li>Everything else can stay as "No access"</li>
+        </ul>
+      </li>
+      <li>Click <strong>"Generate token"</strong></li>
+    </ol>
+
+    <div class="warn">
+      ⚠️ The token is shown ONLY ONCE. Copy it immediately and send it to the person who will push the code. It looks like:<br>
+      <span class="path">github_pat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+    </div>
+  </div>
+</div>
+
+<!-- Part 3: Share -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">3</div>
+    <div class="step-title">Share These Two Things</div>
+  </div>
+  <div class="step-body">
+    <p>Send these two things to the person pushing the code:</p>
+
+    <table style="width:100%;border-collapse:collapse">
+      <tr>
+        <td style="padding:.5rem;border:1px solid #d1d9e0;font-weight:700;width:30%">1. Repo URL</td>
+        <td style="padding:.5rem;border:1px solid #d1d9e0"><code>https://github.com/YOUR_USERNAME/pak-tele-health.git</code></td>
+      </tr>
+      <tr>
+        <td style="padding:.5rem;border:1px solid #d1d9e0;font-weight:700">2. Access Token</td>
+        <td style="padding:.5rem;border:1px solid #d1d9e0"><code>github_pat_xxxxxxxx...</code></td>
+      </tr>
+    </table>
+
+    <div class="highlight" style="margin-top:.6rem">
+      <strong>That's it!</strong> The other person will use these to push the code. You don't need to do anything else.
+    </div>
+  </div>
+</div>
+
+<!-- Part 4: What happens next -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">4</div>
+    <div class="step-title">What Happens After Code is Pushed</div>
+  </div>
+  <div class="step-body">
+    <p>Once the code is pushed to your repo:</p>
+    <ol>
+      <li>Go to <code>github.com/YOUR_USERNAME/pak-tele-health</code></li>
+      <li>You'll see all the project files, commits, and documentation</li>
+      <li>The <code>README.md</code> will show project description and setup instructions</li>
+      <li><code>setup-guide.html</code> has detailed setup instructions for anyone cloning the repo</li>
+      <li><code>testing-guide.html</code> has step-by-step testing instructions</li>
+    </ol>
+
+    <div class="ok">
+      ✅ After the push is done, you can <strong>revoke the token</strong> for safety:<br>
+      Go to <a href="https://github.com/settings/tokens?type=beta" target="_blank">Settings → Tokens</a> → click the token → <strong>Delete</strong>
+    </div>
+  </div>
+</div>
+
+<!-- Part 5: If you want to clone it yourself -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">5</div>
+    <div class="step-title">If You Want to Run the Project Yourself</div>
+  </div>
+  <div class="step-body">
+    <p>After the code is on GitHub, you can clone and run it on your own machine:</p>
+
+    <span class="path">git clone https://github.com/YOUR_USERNAME/pak-tele-health.git</span>
+
+    <p>Then open <code>setup-guide.html</code> in the repo — it has complete step-by-step instructions for installing Node.js, MySQL, and running the app.</p>
+
+    <p>Or just ask Claude: <em>"I cloned the pak-tele-health repo, help me set it up and run it"</em> — Claude can read the project files and guide you.</p>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

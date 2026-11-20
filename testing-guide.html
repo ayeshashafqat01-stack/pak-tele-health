@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pak-Tele-Health — Testing Guide</title>
+<style>
+:root{--bg:#f2f6f5;--surface:#fff;--ink:#15262a;--muted:#566a6e;--line:#d4dfdd;--brand:#0d6b6e;--ok:#1b6638;--ok-bg:#e0f3e6;--warn:#7d4a00;--warn-bg:#fdeed0;--bad:#a3231a;--bad-bg:#fbe2df;--priv:#4f3d91;--priv-bg:#ebe6fa;--info:#1f5a8a;--info-bg:#dfedf9}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;padding:0}
+.top{background:var(--brand);color:#fff;padding:1.5rem 2rem;position:sticky;top:0;z-index:10}
+.top h1{font-size:1.5rem;margin-bottom:.3rem}
+.top p{opacity:.85;font-size:.95rem}
+.container{max-width:900px;margin:0 auto;padding:1.5rem}
+.warn-box{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:.8rem 1rem;font-weight:700;margin-bottom:1.5rem;font-size:.95rem}
+
+/* TOC */
+.toc{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1rem 1.5rem;margin-bottom:2rem}
+.toc h2{font-size:1.1rem;margin-bottom:.5rem}
+.toc ol{padding-left:1.3rem}
+.toc li{margin:.3rem 0}
+.toc a{color:var(--brand);text-decoration:none;font-weight:600}
+.toc a:hover{text-decoration:underline}
+
+/* Steps */
+.step{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-bottom:1.5rem;overflow:hidden}
+.step-header{padding:1rem 1.2rem;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.7rem;cursor:pointer}
+.step-header:hover{background:var(--bg)}
+.step-num{background:var(--brand);color:#fff;width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
+.step-title{font-weight:700;font-size:1.05rem}
+.step-body{padding:1.2rem}
+.step-body>*+*{margin-top:.8rem}
+
+/* Sub-items */
+.sub{padding:.6rem .8rem;border:1px solid var(--line);border-radius:6px;margin-top:.5rem;background:var(--bg)}
+.sub b{display:block;margin-bottom:.2rem}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:.82rem;white-space:nowrap}
+
+/* Tags */
+.tag{display:inline-block;padding:.1rem .5rem;border-radius:4px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.tag.pass{background:var(--ok-bg);color:var(--ok)}
+.tag.fail{background:var(--bad-bg);color:var(--bad)}
+.tag.info{background:var(--info-bg);color:var(--info)}
+.tag.priv{background:var(--priv-bg);color:var(--priv)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+
+/* Code */
+code{background:#e8eded;padding:.15rem .4rem;border-radius:4px;font-size:.88rem;font-family:Consolas,monospace}
+pre{background:#1a2d31;color:#d3ebe9;padding:.8rem 1rem;border-radius:6px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+
+/* Checklist */
+.checklist{list-style:none;padding:0}
+.checklist li{padding:.4rem 0;padding-left:1.8rem;position:relative}
+.checklist li::before{content:"☐";position:absolute;left:0;font-size:1.1rem}
+.checklist li.done::before{content:"☑";color:var(--ok)}
+
+/* Credential box */
+.creds{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem}
+.cred{border:1px solid var(--line);border-radius:6px;padding:.6rem .8rem;background:var(--bg)}
+.cred .role{font-weight:700;font-size:.9rem}
+.cred .email{font-family:monospace;font-size:.85rem;color:var(--brand)}
+.cred .pw{font-family:monospace;font-size:.85rem;color:var(--muted)}
+
+/* Flow diagram */
+.flow{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:.8rem 1rem;font-family:monospace;font-size:.82rem;white-space:pre;overflow-x:auto;line-height:1.6}
+
+ol.steps-list{padding-left:1.3rem}
+ol.steps-list li{margin:.4rem 0}
+ol.steps-list li+li{margin-top:.5rem}
+p+p{margin-top:.5rem}
+
+h3{font-size:.95rem;color:var(--brand);margin-bottom:.3rem;margin-top:.8rem}
+hr{border:none;border-top:1px solid var(--line);margin:1.5rem 0}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Pak-Tele-Health — Testing Guide</h1>
+  <p>Step-by-step manual testing for all major flows. All data is synthetic.</p>
+</div>
+
+<div class="container">
+
+<div class="warn-box">
+  All data in this environment is synthetic. No real patient information. This guide is for development/QA testing only.
+</div>
+
+<!-- Prerequisites -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">0</div>
+    <div class="step-title">Prerequisites — Start the App</div>
+  </div>
+  <div class="step-body">
+    <p>Make sure MySQL and the dev server are running:</p>
+    <pre>
+# Terminal 1: Start MySQL (if not running)
+mysqld --datadir=/tmp/pth-mysql --socket=/tmp/mysql.sock \
+  --port=3306 --log-error=/tmp/pth-mysql-log/error.log \
+  --skip-grant-tables --default-time-zone='+00:00' &
+
+# Terminal 2: Start app
+cd /home/sageteck/projects/pak-tele-health
+npm run dev</pre>
+    <p>Open <a href="http://localhost:3000" target="_blank"><code>http://localhost:3000</code></a> in your browser.</p>
+
+    <h3>Demo Accounts</h3>
+    <div class="creds">
+      <div class="cred">
+        <div class="role">Healthcare Worker</div>
+        <div class="email">hw@demo.pth</div>
+        <div class="pw">demo-hw-pass</div>
+      </div>
+      <div class="cred">
+        <div class="role">Doctor / Specialist</div>
+        <div class="email">doctor@demo.pth</div>
+        <div class="pw">demo-doctor-pass</div>
+      </div>
+      <div class="cred">
+        <div class="role">Administrator</div>
+        <div class="email">admin@demo.pth</div>
+        <div class="pw">demo-admin-pass</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <h2>Test Sections</h2>
+  <ol>
+    <li><a href="#step1">Login &amp; Authentication</a></li>
+    <li><a href="#step2">HW Dashboard</a></li>
+    <li><a href="#step3">Patient Registration</a></li>
+    <li><a href="#step4">Record Observation</a></li>
+    <li><a href="#step5">Alert Rule Triggers</a></li>
+    <li><a href="#step6">Private Mental-Health Screening</a></li>
+    <li><a href="#step7">Patient Record View</a></li>
+    <li><a href="#step8">Doctor Dashboard &amp; Review</a></li>
+    <li><a href="#step9">Consultation &amp; Referral</a></li>
+    <li><a href="#step10">Offline Sync (Real)</a></li>
+    <li><a href="#step11">Authorization &amp; Privacy</a></li>
+    <li><a href="#step12">Admin Dashboard</a></li>
+    <li><a href="#step13">API Endpoint Tests</a></li>
+  </ol>
+</div>
+
+<!-- Step 1: Login -->
+<div class="step" id="step1">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <div class="step-title">Login &amp; Authentication</div>
+  </div>
+  <div class="step-body">
+    <p>Go to <code>http://localhost:3000/login</code></p>
+    <p>You should see: Email field, Password field, 3 demo account "Fill" buttons.</p>
+
+    <table>
+      <thead><tr><th>Test</th><th>Action</th><th>Expected Result</th><th>Check</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Empty submit</td>
+          <td>Leave both fields empty, click Log in</td>
+          <td>"Enter email and password" error</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Wrong password</td>
+          <td>Email: <code>hw@demo.pth</code>, Password: <code>wrongpass</code></td>
+          <td>"Invalid email or password" error</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Non-existent user</td>
+          <td>Email: <code>nobody@test.com</code>, Password: <code>anything</code></td>
+          <td>"Invalid email or password" error</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Demo fill — HW</td>
+          <td>Click "Healthcare worker" Fill button</td>
+          <td>Email and password auto-fill</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>HW login</td>
+          <td>Fill HW credentials → Log in</td>
+          <td>Redirect to <code>/hw</code> dashboard</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Doctor login</td>
+          <td>Logout → Fill Doctor → Log in</td>
+          <td>Redirect to <code>/doctor</code> dashboard</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Admin login</td>
+          <td>Logout → Fill Admin → Log in</td>
+          <td>Redirect to <code>/admin</code> dashboard</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Logout</td>
+          <td>Click "Log out" in header</td>
+          <td>Redirect to <code>/login</code></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Protected route</td>
+          <td>While logged out, go to <code>/hw</code></td>
+          <td>Redirect to <code>/login</code></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Step 2: HW Dashboard -->
+<div class="step" id="step2">
+  <div class="step-header">
+    <div class="step-num">2</div>
+    <div class="step-title">HW Dashboard</div>
+  </div>
+  <div class="step-body">
+    <p>Login as <strong>Healthcare Worker</strong>. You are at <code>/hw</code>.</p>
+    <ul class="checklist">
+      <li>Header shows: "Pak-Tele-Health" + nav links (Dashboard, Register, Record)</li>
+      <li>Header shows: role "Healthcare worker", connectivity status, theme toggle</li>
+      <li>Action buttons: "+ Register patient" and "Record observation"</li>
+      <li>KPI cards: Patients (6), Pending sync (0), Active alerts (3)</li>
+      <li>Alert cards for: Fatima Bibi (HIGH), Nadia Bibi (PRIVATE), Ahmed Khan (REVIEW)</li>
+      <li>PRIVATE alert shows "Details are private to authorized users" (not the actual detail)</li>
+      <li>Recent patients table with 6 patients, status badges, sync badges</li>
+      <li>Pending sync section shows "Everything is synced"</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Step 3: Patient Registration -->
+<div class="step" id="step3">
+  <div class="step-header">
+    <div class="step-num">3</div>
+    <div class="step-title">Patient Registration</div>
+  </div>
+  <div class="step-body">
+    <p>Navigate to <strong>Register</strong> (nav link or button on dashboard).</p>
+
+    <h3>A) Validation Tests</h3>
+    <table>
+      <thead><tr><th>Test</th><th>Action</th><th>Expected</th><th>Check</th></tr></thead>
+      <tbody>
+        <tr><td>Empty name</td><td>Leave name empty, fill rest, Save</td><td>Name error</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Empty age</td><td>Leave age empty</td><td>Age error</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>No sex</td><td>Don't select sex</td><td>Sex error</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>No location</td><td>Leave location empty</td><td>Location error</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Maternal, no weeks</td><td>Pathway=Maternal, don't enter weeks</td><td>Pregnancy weeks error</td><td><span class="tag info">☐</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>B) Successful Registration</h3>
+    <ol class="steps-list">
+      <li>Click <strong>"Fill demo example (Fatima Bibi)"</strong> — all fields auto-fill</li>
+      <li>Change name to <strong>"Test Patient Zahra"</strong> (avoid duplicate)</li>
+      <li>Click <strong>Save patient</strong></li>
+      <li>Success message with patient code (e.g., PT-000107) <span class="tag info">☐</span></li>
+      <li>"Record observation" and "View patient" buttons appear <span class="tag info">☐</span></li>
+      <li>Click "View patient" — patient detail page loads <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>C) Pathway Switching</h3>
+    <ol class="steps-list">
+      <li>Go back to Register</li>
+      <li>Select pathway: "Chronic disease" — pregnancy weeks field disappears <span class="tag info">☐</span></li>
+      <li>Select pathway: "Mental-health screening" — pregnancy weeks field disappears <span class="tag info">☐</span></li>
+      <li>Select pathway: "Maternal monitoring" — pregnancy weeks field reappears <span class="tag info">☐</span></li>
+    </ol>
+  </div>
+</div>
+
+<!-- Step 4: Record Observation -->
+<div class="step" id="step4">
+  <div class="step-header">
+    <div class="step-num">4</div>
+    <div class="step-title">Record Observation</div>
+  </div>
+  <div class="step-body">
+    <p>Navigate to <strong>Record</strong>.</p>
+
+    <h3>A) Normal Reading (No Alert)</h3>
+    <ol class="steps-list">
+      <li>Patient: <strong>Shabana Kausar</strong></li>
+      <li>Type: <strong>Blood pressure</strong></li>
+      <li>Systolic: <strong>115</strong>, Diastolic: <strong>75</strong></li>
+      <li>Click <strong>Save observation</strong></li>
+      <li>Message: "No alert rule was triggered" <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>B) High BP (Triggers Alert)</h3>
+    <ol class="steps-list">
+      <li>Click <strong>"Record another"</strong></li>
+      <li>Patient: <strong>any patient</strong></li>
+      <li>Type: Blood pressure</li>
+      <li>Systolic: <strong>170</strong>, Diastolic: <strong>115</strong></li>
+      <li>Click Save</li>
+      <li><span class="tag fail">HIGH</span> alert card appears <span class="tag info">☐</span></li>
+      <li>Alert says "professional review required" <span class="tag info">☐</span></li>
+      <li>Rationale explains the rule <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>C) Observation Type Switching</h3>
+    <p>Click the type buttons and verify fields change:</p>
+    <table>
+      <thead><tr><th>Type</th><th>Fields shown</th><th>Check</th></tr></thead>
+      <tbody>
+        <tr><td>Blood pressure</td><td>Systolic + Diastolic</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Heart rate</td><td>Single value (bpm)</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>SpO2</td><td>Single value (%)</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Temperature</td><td>Single value (°C), step=0.1</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Glucose</td><td>Single value (mg/dL)</td><td><span class="tag info">☐</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>D) Symptoms Selection</h3>
+    <ol class="steps-list">
+      <li>Symptoms section shows 6 checkbox chips <span class="tag info">☐</span></li>
+      <li>Select "Severe headache" + "Swelling" — chips highlight <span class="tag info">☐</span></li>
+      <li>Deselect — chip un-highlights <span class="tag info">☐</span></li>
+    </ol>
+  </div>
+</div>
+
+<!-- Step 5: Alert Rules -->
+<div class="step" id="step5">
+  <div class="step-header">
+    <div class="step-num">5</div>
+    <div class="step-title">Alert Rule Trigger Tests</div>
+  </div>
+  <div class="step-body">
+    <p>Record observations with these values and verify alerts:</p>
+    <table>
+      <thead><tr><th>Type</th><th>Value</th><th>Expected Alert</th><th>Level</th><th>Check</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Blood pressure</td><td>Systolic: 170, Diastolic: 115</td>
+          <td>Abnormal BP</td><td><span class="tag fail">HIGH</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>BP (maternal patient + symptoms)</td><td>Systolic: 145, Diastolic: 95 + select "Severe headache"</td>
+          <td>Abnormal BP + symptoms</td><td><span class="tag fail">HIGH</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>SpO2</td><td>88</td>
+          <td>Low SpO2</td><td><span class="tag fail">HIGH</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Temperature</td><td>39.2</td>
+          <td>High temperature</td><td><span class="tag warn">REVIEW</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Heart rate</td><td>130</td>
+          <td>Abnormal heart rate</td><td><span class="tag warn">REVIEW</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Heart rate</td><td>42</td>
+          <td>Abnormal heart rate</td><td><span class="tag warn">REVIEW</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Glucose</td><td>280</td>
+          <td>Abnormal glucose</td><td><span class="tag warn">REVIEW</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Glucose</td><td>55</td>
+          <td>Abnormal glucose</td><td><span class="tag warn">REVIEW</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Heart rate</td><td>75</td>
+          <td>No alert</td><td><span class="tag pass">NONE</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Blood pressure</td><td>120/80</td>
+          <td>No alert</td><td><span class="tag pass">NONE</span></td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Important:</strong> Every alert must say "This is not a diagnosis. The clinician makes the clinical decision."</p>
+  </div>
+</div>
+
+<!-- Step 6: Private Screening -->
+<div class="step" id="step6">
+  <div class="step-header">
+    <div class="step-num">6</div>
+    <div class="step-title">Private Mental-Health Screening</div>
+  </div>
+  <div class="step-body">
+    <p>This only works for <strong>mental-health pathway</strong> patients (e.g., Nadia Bibi).</p>
+
+    <ol class="steps-list">
+      <li>Go to dashboard → click <strong>Nadia Bibi</strong> → click <strong>"Private screening"</strong> button</li>
+      <li>Purple privacy banner appears: "Mental-health information is private..." <span class="tag info">☐</span></li>
+      <li>Warning banner: "Demo questions only..." <span class="tag info">☐</span></li>
+      <li>5 questions shown, each with 4 radio options <span class="tag info">☐</span></li>
+      <li>Try submitting without answering all → "Answer every question" error <span class="tag info">☐</span></li>
+      <li>Answer all 5 questions → click <strong>"Save private screening"</strong></li>
+      <li>"Responses saved privately" message <span class="tag info">☐</span></li>
+      <li>"Professional review required" card — no score or diagnosis shown <span class="tag info">☐</span></li>
+      <li>"Request counselling" and "Back to patient" buttons <span class="tag info">☐</span></li>
+    </ol>
+
+    <div class="sub">
+      <b>Privacy check:</b>
+      As HW, go to Nadia Bibi's patient page → Private screening section should say
+      "Screening completed. Details restricted to authorized users." — answers NOT visible. <span class="tag info">☐</span>
+    </div>
+  </div>
+</div>
+
+<!-- Step 7: Patient Record -->
+<div class="step" id="step7">
+  <div class="step-header">
+    <div class="step-num">7</div>
+    <div class="step-title">Patient Record View</div>
+  </div>
+  <div class="step-body">
+    <p>Click on a patient from the dashboard table, e.g., <strong>Fatima Bibi</strong>.</p>
+
+    <ul class="checklist">
+      <li>Patient header: Name, code (PT-000106), age, sex, location, pregnancy weeks</li>
+      <li>"Record observation" button (HW) or "Review case" button (Doctor)</li>
+      <li>Alert cards for open alerts (Fatima has HIGH alert)</li>
+      <li>Current readings: 5 vital cards (BP, HR, SpO2, Temp, Glucose)</li>
+      <li>Flagged vitals have red border (e.g., BP 160/110)</li>
+      <li>Vitals with no reading show "—" and "No reading"</li>
+      <li>Symptoms line shows if any observation has symptoms</li>
+      <li>Historical readings: BP trend chart with systolic/diastolic lines</li>
+      <li>Chart has "View as table" expandable alternative</li>
+      <li>Review threshold line at 140 mmHg</li>
+      <li>Consultations section (empty or shows previous consultations)</li>
+    </ul>
+
+    <div class="sub">
+      <b>Chart test:</b> Patient needs at least 2 BP readings for the chart.
+      Fatima Bibi has 2 (122/78 and 160/110), Ahmed Khan has 4 readings — best for chart testing.
+    </div>
+  </div>
+</div>
+
+<!-- Step 8: Doctor Dashboard -->
+<div class="step" id="step8">
+  <div class="step-header">
+    <div class="step-num">8</div>
+    <div class="step-title">Doctor Dashboard &amp; Review</div>
+  </div>
+  <div class="step-body">
+    <p><strong>Logout</strong> → Login as <strong>Doctor</strong> (<code>doctor@demo.pth</code>).</p>
+
+    <h3>A) Dashboard</h3>
+    <ul class="checklist">
+      <li>Header nav: only "Dashboard" (no Register/Record)</li>
+      <li>KPIs: Patients assigned, Active alerts, Pending referrals</li>
+      <li>Alert table with patient name, issue, status badge, "Review case" buttons</li>
+      <li>All patients table below</li>
+    </ul>
+
+    <h3>B) Review a Case</h3>
+    <ol class="steps-list">
+      <li>Click <strong>"Review case"</strong> on <strong>Fatima Bibi</strong></li>
+      <li>Page shows: patient info, alert cards, current readings, BP chart <span class="tag info">☐</span></li>
+      <li>Consultation form with: notes, recommendation dropdown, referral checkbox <span class="tag info">☐</span></li>
+      <li>"No automatic diagnosis is shown" disclaimer <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>C) View Full Patient Record</h3>
+    <ol class="steps-list">
+      <li>On review page, click <strong>"View full patient record"</strong></li>
+      <li>Goes to <code>/doctor/patients/[id]</code> (NOT <code>/hw/patients</code>) <span class="tag info">☐</span></li>
+      <li>Shows "Review case" button (not "Record observation") <span class="tag info">☐</span></li>
+    </ol>
+  </div>
+</div>
+
+<!-- Step 9: Consultation & Referral -->
+<div class="step" id="step9">
+  <div class="step-header">
+    <div class="step-num">9</div>
+    <div class="step-title">Consultation &amp; Referral Flow</div>
+  </div>
+  <div class="step-body">
+    <p>As <strong>Doctor</strong>, on the review page for <strong>Fatima Bibi</strong>:</p>
+
+    <h3>A) Save Consultation Only</h3>
+    <ol class="steps-list">
+      <li>Notes: type <strong>"BP elevated, continue monitoring"</strong></li>
+      <li>Recommendation: <strong>"Follow-up in 3 days"</strong></li>
+      <li>Leave "Referral required?" unchecked</li>
+      <li>Click <strong>Save consultation</strong></li>
+      <li>"Consultation saved" message <span class="tag info">☐</span></li>
+      <li>Alerts marked as REVIEWED <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>B) Save Consultation + Referral</h3>
+    <ol class="steps-list">
+      <li>Review another patient (e.g., Ahmed Khan) or trigger a new alert first</li>
+      <li>Notes: type <strong>"Needs specialist evaluation"</strong></li>
+      <li>Check <strong>"Yes, create referral"</strong></li>
+      <li>Destination and Priority dropdowns appear <span class="tag info">☐</span></li>
+      <li>Select: <strong>THQ</strong>, Priority: <strong>High</strong></li>
+      <li>Save → "Consultation saved. Referral created." <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>C) Referral Progression</h3>
+    <p>Scroll down to "Previous consultations" section:</p>
+    <ol class="steps-list">
+      <li>Referral status steps shown: <span class="tag warn">Pending</span> → Accepted → Completed <span class="tag info">☐</span></li>
+      <li>Click <strong>"Mark accepted"</strong> → step advances <span class="tag info">☐</span></li>
+      <li>Click <strong>"Mark completed"</strong> → referral complete <span class="tag info">☐</span></li>
+      <li>No more advance button after Completed <span class="tag info">☐</span></li>
+    </ol>
+
+    <div class="flow">
+Referral State Machine:
+
+  PENDING ──→ ACCEPTED ──→ COMPLETED
+     │            │
+     └──→ CANCELLED ←──┘
+
+  Each transition records: actor, timestamp, reason
+    </div>
+  </div>
+</div>
+
+<!-- Step 10: Offline Sync -->
+<div class="step" id="step10">
+  <div class="step-header">
+    <div class="step-num">10</div>
+    <div class="step-title">Offline Sync (Real IndexedDB)</div>
+  </div>
+  <div class="step-body">
+    <p><strong>Login as HW.</strong> This uses real IndexedDB storage, not fake simulation.</p>
+
+    <h3>A) Go Offline &amp; Save Records</h3>
+    <ol class="steps-list">
+      <li>In header, click <strong>Offline</strong> button</li>
+      <li>Red banner: "Offline — Records will be saved and synchronized..." <span class="tag info">☐</span></li>
+      <li>Go to <strong>Register</strong> → fill a patient → <strong>Save</strong></li>
+      <li>Success: patient code shows "PT-PENDING", badge: <span class="tag warn">Pending sync</span> <span class="tag info">☐</span></li>
+      <li>Go to <strong>Record</strong> → select a patient → record BP 120/80 → <strong>Save</strong></li>
+      <li>"Saved" with <span class="tag warn">Pending sync</span> badge <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>B) Check Dashboard Queue</h3>
+    <ol class="steps-list">
+      <li>Go to dashboard</li>
+      <li>KPI: "Pending sync" shows <strong>2</strong> (or more) <span class="tag info">☐</span></li>
+      <li>Pending sync table shows actual records with: type, saved time, attempts, status <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>C) Verify IndexedDB Storage</h3>
+    <ol class="steps-list">
+      <li>Open browser DevTools → <strong>Application</strong> tab → <strong>IndexedDB</strong></li>
+      <li>Find database: <strong>pak-tele-health-offline</strong> <span class="tag info">☐</span></li>
+      <li>Table: <strong>mutations</strong> — your queued records are here <span class="tag info">☐</span></li>
+      <li>Each record has: id, type, endpoint, body (JSON), idempotencyKey, status <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>D) Go Online &amp; Sync</h3>
+    <ol class="steps-list">
+      <li>Click <strong>Online</strong> in header</li>
+      <li>Sync starts: status changes PENDING → SYNCING → SYNCED <span class="tag info">☐</span></li>
+      <li>Dashboard pending count goes to 0 <span class="tag info">☐</span></li>
+      <li>IndexedDB: synced records get cleaned up after ~3 seconds <span class="tag info">☐</span></li>
+      <li>Refresh dashboard: newly registered patient appears with real code <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>E) Auto-Detection (without simulator)</h3>
+    <p>To test real network detection:</p>
+    <ol class="steps-list">
+      <li>Turn off WiFi / disconnect ethernet on your computer</li>
+      <li>App should detect offline automatically within seconds <span class="tag info">☐</span></li>
+      <li>Turn WiFi back on</li>
+      <li>App detects online, starts syncing queued items <span class="tag info">☐</span></li>
+    </ol>
+
+    <div class="sub">
+      <b>How it works:</b><br>
+      1. <code>window.offline/online</code> events — instant detection<br>
+      2. <code>/api/health/live</code> ping every 30 seconds — catches "connected but no internet"<br>
+      3. Forms save to IndexedDB via Dexie when offline<br>
+      4. Sync coordinator sends in dependency order (patient before observation)<br>
+      5. Idempotency keys prevent duplicates on retry
+    </div>
+  </div>
+</div>
+
+<!-- Step 11: Authorization -->
+<div class="step" id="step11">
+  <div class="step-header">
+    <div class="step-num">11</div>
+    <div class="step-title">Authorization &amp; Privacy Tests</div>
+  </div>
+  <div class="step-body">
+
+    <h3>A) HW Cannot See Screening Answers</h3>
+    <ol class="steps-list">
+      <li>Login as <strong>HW</strong></li>
+      <li>Go to Nadia Bibi's patient page (mental health patient with completed screening)</li>
+      <li>Private screening section: <strong>"Screening completed. Details restricted to authorized users."</strong> <span class="tag info">☐</span></li>
+      <li>Actual answers are NOT shown <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>B) Doctor CAN See Screening Answers</h3>
+    <ol class="steps-list">
+      <li>Logout → Login as <strong>Doctor</strong></li>
+      <li>Go to same patient (Nadia Bibi)</li>
+      <li>Private screening section: answers are shown with question text and selected option <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>C) PRIVATE Alert Detail Hidden from HW</h3>
+    <ol class="steps-list">
+      <li>Login as <strong>HW</strong> → Dashboard</li>
+      <li>Nadia Bibi's alert card: detail says "Details are private to authorized users" <span class="tag info">☐</span></li>
+      <li>Login as <strong>Doctor</strong> → Dashboard</li>
+      <li>Same alert: actual detail is visible ("Private screening completed.") <span class="tag info">☐</span></li>
+    </ol>
+
+    <h3>D) Role-Based Navigation</h3>
+    <table>
+      <thead><tr><th>Role</th><th>Nav Items</th><th>Patient Page Actions</th><th>Check</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>HW</td>
+          <td>Dashboard, Register, Record</td>
+          <td>"Record observation", "Private screening"</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+        <tr>
+          <td>Doctor</td>
+          <td>Dashboard only</td>
+          <td>"Review case"</td>
+          <td><span class="tag info">☐</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Step 12: Admin -->
+<div class="step" id="step12">
+  <div class="step-header">
+    <div class="step-num">12</div>
+    <div class="step-title">Admin Dashboard</div>
+  </div>
+  <div class="step-body">
+    <p>Login as <strong>Admin</strong> (<code>admin@demo.pth</code>).</p>
+    <ul class="checklist">
+      <li>Redirect to <code>/admin</code></li>
+      <li>Synthetic data warning banner</li>
+      <li>KPI cards: Active users (3), Facilities (5), Patients, Open alerts, Audit events</li>
+      <li>Audit events count increases as you use the app (login, create patient, etc.)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Step 13: API Tests -->
+<div class="step" id="step13">
+  <div class="step-header">
+    <div class="step-num">13</div>
+    <div class="step-title">API Endpoint Tests (Terminal)</div>
+  </div>
+  <div class="step-body">
+    <p>Run these in a terminal to test API directly:</p>
+
+    <h3>Health Checks (no auth needed)</h3>
+    <pre>
+curl http://localhost:3000/api/health/live
+# → {"status":"ok"}
+
+curl http://localhost:3000/api/health/ready
+# → {"status":"ready","db":"connected"}</pre>
+
+    <h3>Unauthenticated Access (should fail)</h3>
+    <pre>
+curl http://localhost:3000/api/v1/patients
+# → Redirects to /login (302)</pre>
+
+    <h3>Authenticated API Test</h3>
+    <p>To test with curl, you need the session cookie. Easiest way:</p>
+    <ol class="steps-list">
+      <li>Login in browser</li>
+      <li>Open DevTools → Application → Cookies → <code>localhost</code></li>
+      <li>Copy the value of <code>authjs.session-token</code></li>
+      <li>Use in curl:</li>
+    </ol>
+    <pre>
+TOKEN="paste-your-session-token-here"
+
+# List patients
+curl -H "Cookie: authjs.session-token=$TOKEN" \
+  http://localhost:3000/api/v1/patients?select=id,code,name,pathway
+
+# Get single patient
+curl -H "Cookie: authjs.session-token=$TOKEN" \
+  http://localhost:3000/api/v1/patients/PATIENT_ID_HERE
+
+# HW Dashboard
+curl -H "Cookie: authjs.session-token=$TOKEN" \
+  http://localhost:3000/api/v1/hw/dashboard
+
+# List symptoms
+curl -H "Cookie: authjs.session-token=$TOKEN" \
+  http://localhost:3000/api/v1/symptoms
+
+# List destination facilities
+curl -H "Cookie: authjs.session-token=$TOKEN" \
+  "http://localhost:3000/api/v1/facilities?type=destination"</pre>
+  </div>
+</div>
+
+<hr>
+
+<!-- Summary -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">✓</div>
+    <div class="step-title">Test Completion Summary</div>
+  </div>
+  <div class="step-body">
+    <table>
+      <thead><tr><th>Category</th><th>Tests</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Authentication</td><td>9 tests</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>HW Dashboard</td><td>8 checks</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Patient Registration</td><td>5 validation + 6 success + 4 pathway</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Observations</td><td>2 flows + 5 types + 4 symptom</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Alert Rules</td><td>10 trigger tests</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Screening</td><td>9 steps + privacy check</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Patient Record</td><td>11 checks</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Doctor Dashboard</td><td>4 + 3 + 3 checks</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Consultation/Referral</td><td>5 + 6 + 4 steps</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Offline Sync</td><td>6 + 3 + 4 + 5 + 2 steps</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Authorization</td><td>4 scenarios</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>Admin</td><td>4 checks</td><td><span class="tag info">☐</span></td></tr>
+        <tr><td>API</td><td>6 endpoints</td><td><span class="tag info">☐</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

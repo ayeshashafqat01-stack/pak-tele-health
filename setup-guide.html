@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pak-Tele-Health — Setup Guide</title>
+<style>
+:root{--bg:#f2f6f5;--surface:#fff;--ink:#15262a;--muted:#566a6e;--line:#d4dfdd;--brand:#0d6b6e;--ok:#1b6638;--ok-bg:#e0f3e6;--warn:#7d4a00;--warn-bg:#fdeed0;--bad:#a3231a;--bad-bg:#fbe2df;--info:#1f5a8a;--info-bg:#dfedf9}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;padding:0}
+.top{background:var(--brand);color:#fff;padding:1.5rem 2rem}
+.top h1{font-size:1.5rem;margin-bottom:.3rem}
+.top p{opacity:.85;font-size:.95rem}
+.container{max-width:860px;margin:0 auto;padding:1.5rem}
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:.8rem 1rem;font-weight:700;margin-bottom:1.5rem;font-size:.95rem}
+.info-box{background:var(--info-bg);color:var(--info);border-radius:8px;padding:.8rem 1rem;font-size:.9rem;margin-bottom:1rem}
+.ok-box{background:var(--ok-bg);color:var(--ok);border-radius:8px;padding:.8rem 1rem;font-size:.9rem;margin-bottom:1rem}
+
+.step{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-bottom:1.5rem;overflow:hidden}
+.step-header{padding:1rem 1.2rem;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.7rem}
+.step-num{background:var(--brand);color:#fff;width:2.2rem;height:2.2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;flex-shrink:0}
+.step-title{font-weight:700;font-size:1.1rem}
+.step-body{padding:1.2rem}
+.step-body>*+*{margin-top:.8rem}
+
+pre{background:#1a2d31;color:#d3ebe9;padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.88rem;line-height:1.6;position:relative}
+pre .comment{color:#6b9ea2}
+code{background:#e2eded;padding:.15rem .45rem;border-radius:4px;font-size:.88rem;font-family:Consolas,"Courier New",monospace}
+p+p{margin-top:.6rem}
+h3{font-size:.95rem;color:var(--brand);margin-top:1rem;margin-bottom:.3rem}
+ul,ol{padding-left:1.5rem}
+li{margin:.3rem 0}
+li+li{margin-top:.4rem}
+
+.os-tabs{display:flex;gap:.4rem;margin-bottom:.6rem}
+.os-tab{padding:.4rem .8rem;border:1px solid var(--line);border-radius:6px 6px 0 0;cursor:pointer;font-size:.85rem;font-weight:600;background:var(--bg)}
+.os-tab.active{background:var(--surface);border-bottom-color:var(--surface)}
+.os-panel{display:none}
+.os-panel.active{display:block}
+
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:.82rem}
+
+.creds{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.6rem;margin-top:.5rem}
+.cred{border:1px solid var(--line);border-radius:6px;padding:.6rem .8rem;background:var(--bg)}
+.cred .role{font-weight:700;font-size:.9rem}
+.cred .detail{font-family:monospace;font-size:.85rem;color:var(--brand)}
+
+.tag{display:inline-block;padding:.1rem .5rem;border-radius:4px;font-size:.8rem;font-weight:700}
+.tag.required{background:var(--bad-bg);color:var(--bad)}
+.tag.optional{background:var(--info-bg);color:var(--info)}
+
+.note{background:#f8f4eb;border-left:4px solid var(--warn);padding:.6rem .8rem;border-radius:0 6px 6px 0;font-size:.9rem}
+.tip{background:#edf5ee;border-left:4px solid var(--ok);padding:.6rem .8rem;border-radius:0 6px 6px 0;font-size:.9rem}
+hr{border:none;border-top:1px solid var(--line);margin:1rem 0}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Pak-Tele-Health — Setup Guide</h1>
+  <p>Everything you need to clone, set up, and run the project from scratch.</p>
+</div>
+
+<div class="container">
+
+<div class="warn">
+  All data in this project is synthetic. No real patient information. This is a development MVP.
+</div>
+
+<div class="info-box">
+  <strong>Using Claude?</strong> You can paste any section of this guide to Claude and ask it to help you run the commands or troubleshoot issues. The project has a <code>CLAUDE_BUILD_PROMPT.md</code> with full context.
+</div>
+
+<!-- ============================================================ -->
+<!-- PREREQUISITES -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <div class="step-title">Prerequisites</div>
+  </div>
+  <div class="step-body">
+    <p>You need these installed on your machine:</p>
+    <table>
+      <thead><tr><th>Tool</th><th>Version</th><th>Required?</th><th>Check Command</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Node.js</strong></td>
+          <td>v20 or later</td>
+          <td><span class="tag required">Required</span></td>
+          <td><code>node --version</code></td>
+        </tr>
+        <tr>
+          <td><strong>npm</strong></td>
+          <td>v10 or later (comes with Node)</td>
+          <td><span class="tag required">Required</span></td>
+          <td><code>npm --version</code></td>
+        </tr>
+        <tr>
+          <td><strong>MySQL</strong></td>
+          <td>8.0+</td>
+          <td><span class="tag required">Required</span></td>
+          <td><code>mysql --version</code></td>
+        </tr>
+        <tr>
+          <td><strong>Git</strong></td>
+          <td>Any recent</td>
+          <td><span class="tag required">Required</span></td>
+          <td><code>git --version</code></td>
+        </tr>
+        <tr>
+          <td><strong>Docker</strong></td>
+          <td>Any recent</td>
+          <td><span class="tag optional">Optional</span> (alternative to local MySQL)</td>
+          <td><code>docker --version</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Installing Prerequisites</h3>
+
+    <p><strong>Node.js:</strong></p>
+    <pre><span class="comment"># Ubuntu/Debian</span>
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+<span class="comment"># macOS (with Homebrew)</span>
+brew install node@20
+
+<span class="comment"># Windows: download from https://nodejs.org</span></pre>
+
+    <p><strong>MySQL 8:</strong></p>
+    <pre><span class="comment"># Ubuntu/Debian</span>
+sudo apt install -y mysql-server
+sudo service mysql start
+
+<span class="comment"># macOS</span>
+brew install mysql
+brew services start mysql
+
+<span class="comment"># Windows: download MySQL Installer from https://dev.mysql.com/downloads/installer/</span></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- CLONE -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">2</div>
+    <div class="step-title">Clone the Repository</div>
+  </div>
+  <div class="step-body">
+    <pre><span class="comment"># Replace with the actual repo URL after it's pushed</span>
+git clone https://github.com/YOUR_USERNAME/pak-tele-health.git
+cd pak-tele-health</pre>
+
+    <div class="note">
+      <strong>Note:</strong> The repo URL will be updated once it's pushed to GitHub. Ask the person who shared this for the correct URL.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- INSTALL DEPS -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">3</div>
+    <div class="step-title">Install Dependencies</div>
+  </div>
+  <div class="step-body">
+    <pre>npm install --legacy-peer-deps</pre>
+
+    <div class="note">
+      The <code>--legacy-peer-deps</code> flag is needed because some packages have peer dependency conflicts. This is safe to use.
+    </div>
+
+    <p>This installs ~350 packages including Next.js, Prisma, NextAuth, Tailwind CSS, etc. It may take 2-5 minutes.</p>
+
+    <p>After install, generate the Prisma client:</p>
+    <pre>npx prisma generate</pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MYSQL SETUP -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">4</div>
+    <div class="step-title">Set Up MySQL Database</div>
+  </div>
+  <div class="step-body">
+    <p>You have <strong>3 options</strong>. Pick the one that works for your setup:</p>
+
+    <!-- Option A -->
+    <h3>Option A: Local MySQL with root access (simplest)</h3>
+    <p>If MySQL is installed and you can access it as root:</p>
+    <pre><span class="comment"># Start MySQL if not running</span>
+sudo service mysql start
+
+<span class="comment"># Login as root and create the database</span>
+sudo mysql -u root</pre>
+
+    <p>In the MySQL prompt, run:</p>
+    <pre><span class="comment">-- Create the database</span>
+CREATE DATABASE pak_tele_health CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+<span class="comment">-- Create a dedicated user (recommended)</span>
+CREATE USER 'pth_app'@'localhost' IDENTIFIED BY 'pth_dev_pass';
+GRANT ALL PRIVILEGES ON pak_tele_health.* TO 'pth_app'@'localhost';
+FLUSH PRIVILEGES;
+
+EXIT;</pre>
+
+    <!-- Option B -->
+    <h3>Option B: Docker (no local MySQL needed)</h3>
+    <p>If you have Docker installed, the project includes a <code>docker-compose.yml</code>:</p>
+    <pre>docker compose up -d mysql
+
+<span class="comment"># Wait ~10 seconds for MySQL to start, then verify:</span>
+docker compose exec mysql mysql -u root -ppth_root_pass -e "SELECT 1"</pre>
+    <p>Docker creates everything automatically: database, user, password.</p>
+
+    <!-- Option C -->
+    <h3>Option C: MySQL without root/sudo (WSL, shared server)</h3>
+    <p>If you can't use <code>sudo</code> (e.g., WSL without admin):</p>
+    <pre><span class="comment"># Initialize a local MySQL data directory</span>
+mkdir -p /tmp/pth-mysql /tmp/pth-mysql-log
+mysqld --initialize-insecure --datadir=/tmp/pth-mysql \
+  --log-error=/tmp/pth-mysql-log/error.log
+
+<span class="comment"># Start MySQL with local data (no root needed)</span>
+mysqld --datadir=/tmp/pth-mysql \
+  --socket=/tmp/mysql.sock \
+  --port=3306 \
+  --log-error=/tmp/pth-mysql-log/error.log \
+  --skip-grant-tables \
+  --default-time-zone='+00:00' \
+  --character-set-server=utf8mb4 \
+  --collation-server=utf8mb4_unicode_ci &
+
+<span class="comment"># Wait 3 seconds, then create the database</span>
+sleep 3
+mysql -u root --socket=/tmp/mysql.sock -e \
+  "CREATE DATABASE IF NOT EXISTS pak_tele_health CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"</pre>
+
+    <div class="tip">
+      <strong>Tip:</strong> With Option C, MySQL stops when you close the terminal. Run the <code>mysqld ...</code> command again to restart it next time.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ENV FILE -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">5</div>
+    <div class="step-title">Configure Environment Variables</div>
+  </div>
+  <div class="step-body">
+    <p>Copy the example env file:</p>
+    <pre>cp .env.example .env</pre>
+
+    <p>Now edit <code>.env</code> and set the <code>DATABASE_URL</code> based on which MySQL option you used:</p>
+
+    <h3>If you used Option A (local MySQL with user):</h3>
+    <pre>DATABASE_URL="mysql://pth_app:pth_dev_pass@localhost:3306/pak_tele_health"</pre>
+
+    <h3>If you used Option B (Docker):</h3>
+    <pre>DATABASE_URL="mysql://pth_app:pth_dev_pass@localhost:3306/pak_tele_health"</pre>
+
+    <h3>If you used Option C (local data dir with socket):</h3>
+    <pre>DATABASE_URL="mysql://root@localhost:3306/pak_tele_health?socket=/tmp/mysql.sock"</pre>
+
+    <h3>If you used sudo mysql (root with no password):</h3>
+    <pre>DATABASE_URL="mysql://root@localhost:3306/pak_tele_health"</pre>
+
+    <hr>
+
+    <p>The other settings in <code>.env</code> can stay as defaults:</p>
+    <pre><span class="comment"># Keep these as-is for development</span>
+AUTH_SECRET="dev-secret-do-not-use-in-production-change-me-32chars"
+NEXTAUTH_URL="http://localhost:3000"
+NODE_ENV="development"
+ALLOW_SEED="true"</pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCHEMA + SEED -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">6</div>
+    <div class="step-title">Create Tables &amp; Seed Data</div>
+  </div>
+  <div class="step-body">
+    <p>Push the database schema (creates all 35 tables):</p>
+    <pre>npx prisma db push</pre>
+    <p>This reads <code>prisma/schema.prisma</code> and creates all tables, indexes, and foreign keys in MySQL.</p>
+
+    <p>Then seed the database with synthetic demo data:</p>
+    <pre>npx tsx prisma/seed.ts</pre>
+
+    <p>You should see:</p>
+    <pre>Seeding Pak-Tele-Health database (synthetic data)...
+Seed complete. ALL DATA IS SYNTHETIC.
+
+Demo accounts:
+  Healthcare worker: hw@demo.pth / demo-hw-pass
+  Doctor:            doctor@demo.pth / demo-doctor-pass
+  Admin:             admin@demo.pth / demo-admin-pass</pre>
+
+    <h3>What gets seeded:</h3>
+    <table>
+      <thead><tr><th>Data</th><th>Count</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td>Users</td><td>3</td><td>HW (Amina), Doctor (Dr. Rashid), Admin</td></tr>
+        <tr><td>Roles</td><td>3</td><td>HEALTHCARE_WORKER, DOCTOR, ADMIN</td></tr>
+        <tr><td>Permissions</td><td>20</td><td>patient:create, screening:read_private, etc.</td></tr>
+        <tr><td>Facilities</td><td>5</td><td>BHU, THQ, DHQ, Specialist, Mental Health</td></tr>
+        <tr><td>Patients</td><td>6</td><td>Ahmed Khan, Nadia Bibi, Shabana, Gulzar, Aslam, Fatima</td></tr>
+        <tr><td>Observations</td><td>~10</td><td>BP readings, glucose for seeded patients</td></tr>
+        <tr><td>Alerts</td><td>3</td><td>HIGH (Fatima), REVIEW (Ahmed), PRIVATE (Nadia)</td></tr>
+        <tr><td>Screening</td><td>1</td><td>Nadia's mental health screening (completed)</td></tr>
+        <tr><td>Questionnaire</td><td>1</td><td>5 demo questions, 4 options each</td></tr>
+        <tr><td>Clinical Rules</td><td>8</td><td>BP, SpO2, glucose, temp, HR, screening rules</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      <strong>Tip:</strong> The seed is idempotent — you can run it again safely without duplicating data.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- START APP -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">7</div>
+    <div class="step-title">Start the App</div>
+  </div>
+  <div class="step-body">
+    <pre>npm run dev</pre>
+
+    <p>You should see:</p>
+    <pre>▲ Next.js 16.4.6 (Turbopack)
+- Local:         http://localhost:3000
+✓ Ready in ~400ms</pre>
+
+    <p>Open <a href="http://localhost:3000" target="_blank"><strong>http://localhost:3000</strong></a> in your browser.</p>
+
+    <p>You'll be redirected to the login page. Use these demo accounts:</p>
+
+    <div class="creds">
+      <div class="cred">
+        <div class="role">Healthcare Worker</div>
+        <div class="detail">hw@demo.pth</div>
+        <div class="detail" style="color:var(--muted)">demo-hw-pass</div>
+      </div>
+      <div class="cred">
+        <div class="role">Doctor</div>
+        <div class="detail">doctor@demo.pth</div>
+        <div class="detail" style="color:var(--muted)">demo-doctor-pass</div>
+      </div>
+      <div class="cred">
+        <div class="role">Admin</div>
+        <div class="detail">admin@demo.pth</div>
+        <div class="detail" style="color:var(--muted)">demo-admin-pass</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUICK REFERENCE -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">⚡</div>
+    <div class="step-title">Quick Reference — All Commands</div>
+  </div>
+  <div class="step-body">
+    <p>Copy-paste this entire block to get running in one go (Option A — local MySQL with root):</p>
+    <pre><span class="comment"># 1. Clone and enter project</span>
+git clone https://github.com/YOUR_USERNAME/pak-tele-health.git
+cd pak-tele-health
+
+<span class="comment"># 2. Install dependencies</span>
+npm install --legacy-peer-deps
+
+<span class="comment"># 3. Generate Prisma client</span>
+npx prisma generate
+
+<span class="comment"># 4. Create database (run as root in MySQL)</span>
+sudo mysql -u root -e "CREATE DATABASE IF NOT EXISTS pak_tele_health CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+<span class="comment"># 5. Create .env file</span>
+cp .env.example .env
+<span class="comment"># Edit .env → set DATABASE_URL to your MySQL connection string</span>
+
+<span class="comment"># 6. Push schema to database (creates all tables)</span>
+npx prisma db push
+
+<span class="comment"># 7. Seed synthetic data</span>
+npx tsx prisma/seed.ts
+
+<span class="comment"># 8. Start the app</span>
+npm run dev
+
+<span class="comment"># 9. Open http://localhost:3000 in browser</span></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TROUBLESHOOTING -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">🔧</div>
+    <div class="step-title">Troubleshooting</div>
+  </div>
+  <div class="step-body">
+
+    <h3>❌ "Can't connect to MySQL server"</h3>
+    <p>MySQL isn't running. Start it:</p>
+    <pre><span class="comment"># Linux</span>
+sudo service mysql start
+
+<span class="comment"># macOS</span>
+brew services start mysql
+
+<span class="comment"># Docker</span>
+docker compose up -d mysql</pre>
+
+    <h3>❌ "Access denied for user"</h3>
+    <p>Your <code>DATABASE_URL</code> in <code>.env</code> has wrong credentials. Check:</p>
+    <ul>
+      <li>Username and password match what you created in Step 4</li>
+      <li>Database <code>pak_tele_health</code> exists</li>
+      <li>Try connecting manually: <code>mysql -u YOUR_USER -pYOUR_PASSWORD pak_tele_health</code></li>
+    </ul>
+
+    <h3>❌ "npm install" fails with native addon errors</h3>
+    <p>The <code>@node-rs/argon2</code> package uses prebuilt binaries. If it fails:</p>
+    <pre>npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install --legacy-peer-deps</pre>
+
+    <h3>❌ "prisma db push" fails</h3>
+    <p>Check your <code>DATABASE_URL</code> in <code>.env</code>. Common issues:</p>
+    <ul>
+      <li>MySQL not running</li>
+      <li>Database doesn't exist (create it first with Step 4)</li>
+      <li>Wrong socket path (if using Option C)</li>
+    </ul>
+
+    <h3>❌ Seed fails with "SEED BLOCKED"</h3>
+    <p>Add <code>ALLOW_SEED="true"</code> to your <code>.env</code> file.</p>
+
+    <h3>❌ Login doesn't work / "Invalid email or password"</h3>
+    <p>Seed might not have run. Run it again:</p>
+    <pre>npx tsx prisma/seed.ts</pre>
+    <p>Then try logging in with <code>hw@demo.pth</code> / <code>demo-hw-pass</code>.</p>
+
+    <h3>❌ Styles look broken / unstyled page</h3>
+    <p>PostCSS plugin might be missing. Reinstall:</p>
+    <pre>npm install --legacy-peer-deps</pre>
+    <p>Make sure <code>postcss.config.mjs</code> exists with <code>@tailwindcss/postcss</code> plugin.</p>
+
+    <h3>❌ Port 3000 already in use</h3>
+    <pre><span class="comment"># Kill whatever is using port 3000</span>
+fuser -k 3000/tcp    <span class="comment"># Linux</span>
+lsof -ti:3000 | xargs kill  <span class="comment"># macOS</span>
+
+<span class="comment"># Or start on a different port</span>
+npm run dev -- --port 3001</pre>
+
+    <h3>❌ "Module not found" errors</h3>
+    <pre>npx prisma generate
+npm run dev</pre>
+
+    <h3>Still stuck?</h3>
+    <p>Share the error message with Claude — it has full context of this project and can help debug.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PROJECT STRUCTURE -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">📁</div>
+    <div class="step-title">Project Structure Overview</div>
+  </div>
+  <div class="step-body">
+    <pre>pak-tele-health/
+├── prisma/
+│   ├── schema.prisma          <span class="comment"># Database schema (35 tables)</span>
+│   ├── seed.ts                <span class="comment"># Seed script (synthetic data)</span>
+│   └── migrations/            <span class="comment"># SQL migrations</span>
+│
+├── src/
+│   ├── app/                   <span class="comment"># Next.js pages and API routes</span>
+│   │   ├── login/             <span class="comment"># Login page</span>
+│   │   ├── (dashboard)/       <span class="comment"># Protected routes</span>
+│   │   │   ├── hw/            <span class="comment"># Healthcare worker pages</span>
+│   │   │   ├── doctor/        <span class="comment"># Doctor pages</span>
+│   │   │   └── admin/         <span class="comment"># Admin pages</span>
+│   │   └── api/v1/            <span class="comment"># REST API endpoints</span>
+│   │
+│   ├── modules/               <span class="comment"># Domain logic</span>
+│   │   ├── alerts/            <span class="comment"># Alert rules engine</span>
+│   │   ├── audit/             <span class="comment"># Audit logging</span>
+│   │   ├── consultations/     <span class="comment"># Consultation + referral</span>
+│   │   ├── observations/      <span class="comment"># Vitals recording</span>
+│   │   ├── patients/          <span class="comment"># Patient management</span>
+│   │   └── screenings/        <span class="comment"># Mental health screening</span>
+│   │
+│   └── shared/                <span class="comment"># Shared code</span>
+│       ├── auth/              <span class="comment"># Authentication + authorization</span>
+│       ├── db/                <span class="comment"># Prisma client</span>
+│       ├── ui/components/     <span class="comment"># Reusable UI components</span>
+│       ├── ui/tokens/         <span class="comment"># Design system CSS tokens</span>
+│       └── validation/        <span class="comment"># Zod schemas</span>
+│
+├── docs/                      <span class="comment"># Documentation</span>
+│   ├── architecture/          <span class="comment"># Architecture docs</span>
+│   ├── product/               <span class="comment"># Requirements</span>
+│   ├── security/              <span class="comment"># Threat model</span>
+│   └── adr/                   <span class="comment"># Architecture Decision Records</span>
+│
+├── .env.example               <span class="comment"># Environment template</span>
+├── docker-compose.yml         <span class="comment"># Docker setup for MySQL</span>
+├── testing-guide.html         <span class="comment"># Manual testing guide</span>
+└── setup-guide.html           <span class="comment"># This file</span></pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- NPM SCRIPTS -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">📋</div>
+    <div class="step-title">Available Commands</div>
+  </div>
+  <div class="step-body">
+    <table>
+      <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>npm run dev</code></td><td>Start development server (http://localhost:3000)</td></tr>
+        <tr><td><code>npm run build</code></td><td>Production build</td></tr>
+        <tr><td><code>npm run start</code></td><td>Start production server (after build)</td></tr>
+        <tr><td><code>npm run lint</code></td><td>Run ESLint</td></tr>
+        <tr><td><code>npm run typecheck</code></td><td>TypeScript type checking</td></tr>
+        <tr><td><code>npx prisma generate</code></td><td>Regenerate Prisma client</td></tr>
+        <tr><td><code>npx prisma db push</code></td><td>Push schema to database</td></tr>
+        <tr><td><code>npx tsx prisma/seed.ts</code></td><td>Seed database with demo data</td></tr>
+        <tr><td><code>npx prisma studio</code></td><td>Open visual database browser</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      <strong>Tip:</strong> <code>npx prisma studio</code> opens a browser UI where you can browse all tables and data visually. Great for debugging.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- RESET -->
+<!-- ============================================================ -->
+<div class="step">
+  <div class="step-header">
+    <div class="step-num">🔄</div>
+    <div class="step-title">Reset Everything (Start Fresh)</div>
+  </div>
+  <div class="step-body">
+    <p>If something goes wrong and you want a clean slate:</p>
+    <pre><span class="comment"># Drop all tables and recreate</span>
+npx prisma db push --force-reset
+
+<span class="comment"># Re-seed</span>
+npx tsx prisma/seed.ts
+
+<span class="comment"># Restart</span>
+npm run dev</pre>
+
+    <div class="warn" style="margin-top:.8rem">
+      ⚠️ <code>--force-reset</code> deletes ALL data. Only use in development.
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
