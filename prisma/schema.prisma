@@ -1,0 +1,617 @@
+// Pak-Tele-Health Prisma Schema
+// MySQL 8 with InnoDB, utf8mb4, UTC timezone
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// Identity & Auth
+// ============================================================
+
+model User {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  email          String   @unique @db.VarChar(255)
+  name           String   @db.VarChar(255)
+  passwordHash   String   @map("password_hash") @db.VarChar(255)
+  isActive       Boolean  @default(true) @map("is_active")
+  isSynthetic    Boolean  @default(false) @map("is_synthetic")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamp(3)
+
+  userRoles              UserRole[]
+  facilityAssignments    UserFacilityAssignment[]
+  sessions               Session[]
+  accounts               Account[]
+  auditEvents            AuditEvent[]
+  recordedObservations   Observation[]          @relation("ObservationRecorder")
+  screeningSessions      ScreeningSession[]     @relation("ScreeningRecorder")
+  consultations          Consultation[]         @relation("ConsultationDoctor")
+  alertReviews           AlertStatusHistory[]   @relation("AlertReviewer")
+  referralTransitions    ReferralStatusHistory[] @relation("ReferralTransitioner")
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.VarChar(36)
+  permissionId String @map("permission_id") @db.VarChar(36)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId String @map("user_id") @db.VarChar(36)
+  roleId String @map("role_id") @db.VarChar(36)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// Auth.js required tables
+model Account {
+  id                String  @id @default(uuid()) @db.VarChar(36)
+  userId            String  @map("user_id") @db.VarChar(36)
+  type              String  @db.VarChar(50)
+  provider          String  @db.VarChar(50)
+  providerAccountId String  @map("provider_account_id") @db.VarChar(255)
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String? @db.VarChar(50)
+  scope             String? @db.VarChar(255)
+  id_token          String? @db.Text
+  session_state     String? @db.VarChar(255)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  sessionToken String   @unique @map("session_token") @db.VarChar(255)
+  userId       String   @map("user_id") @db.VarChar(36)
+  expires      DateTime @db.Timestamp(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String   @db.VarChar(255)
+  token      String   @unique @db.VarChar(255)
+  expires    DateTime @db.Timestamp(3)
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================
+// Facilities
+// ============================================================
+
+model Facility {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  code        String   @unique @db.VarChar(20)
+  name        String   @db.VarChar(255)
+  type        String   @db.VarChar(50) // BHU, THQ, DHQ, SPECIALIST, MENTAL_HEALTH
+  location    String?  @db.VarChar(500)
+  isActive    Boolean  @default(true) @map("is_active")
+  isSynthetic Boolean  @default(false) @map("is_synthetic")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+
+  userAssignments    UserFacilityAssignment[]
+  patientAssignments PatientFacilityAssignment[]
+  observations       Observation[]
+  referralsFrom      Referral[]  @relation("ReferralSource")
+  referralsTo        Referral[]  @relation("ReferralDestination")
+
+  @@map("facilities")
+}
+
+model UserFacilityAssignment {
+  userId     String   @map("user_id") @db.VarChar(36)
+  facilityId String   @map("facility_id") @db.VarChar(36)
+  isPrimary  Boolean  @default(false) @map("is_primary")
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamp(3)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@id([userId, facilityId])
+  @@map("user_facility_assignments")
+}
+
+// ============================================================
+// Patients
+// ============================================================
+
+model Patient {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  code        String   @unique @db.VarChar(20) // PT-000101
+  name        String   @db.VarChar(255) // PHI
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date // PHI - nullable, age used if DOB unknown
+  age         Int?     // Used when DOB unknown
+  sex         String   @db.VarChar(20) // Male, Female
+  location    String?  @db.VarChar(500) // PHI
+  medicalInfo String?  @map("medical_info") @db.Text // PHI
+  status      String   @default("ACTIVE") @db.VarChar(20) // ACTIVE, ARCHIVED
+  consentGiven Boolean @default(false) @map("consent_given")
+  isSynthetic Boolean  @default(false) @map("is_synthetic")
+  version     Int      @default(1) // Optimistic concurrency
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamp(3)
+  createdBy   String?  @map("created_by") @db.VarChar(36)
+
+  facilityAssignments PatientFacilityAssignment[]
+  patientPathways     PatientPathway[]
+  observations        Observation[]
+  screeningSessions   ScreeningSession[]
+  alerts              Alert[]
+  consultations       Consultation[]
+  referrals           Referral[]
+
+  @@index([code])
+  @@index([name])
+  @@index([status])
+  @@map("patients")
+}
+
+model PatientFacilityAssignment {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  patientId  String   @map("patient_id") @db.VarChar(36)
+  facilityId String   @map("facility_id") @db.VarChar(36)
+  isPrimary  Boolean  @default(true) @map("is_primary")
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamp(3)
+
+  patient  Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, facilityId])
+  @@index([facilityId, patientId])
+  @@map("patient_facility_assignments")
+}
+
+model CarePathway {
+  id          String @id @default(uuid()) @db.VarChar(36)
+  code        String @unique @db.VarChar(50) // maternal, chronic, mental
+  name        String @db.VarChar(100)
+  description String? @db.VarChar(500)
+
+  patientPathways PatientPathway[]
+
+  @@map("care_pathways")
+}
+
+model PatientPathway {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  patientId       String   @map("patient_id") @db.VarChar(36)
+  pathwayId       String   @map("pathway_id") @db.VarChar(36)
+  pregnancyWeeks  Int?     @map("pregnancy_weeks")
+  isActive        Boolean  @default(true) @map("is_active")
+  startedAt       DateTime @default(now()) @map("started_at") @db.Timestamp(3)
+  endedAt         DateTime? @map("ended_at") @db.Timestamp(3)
+
+  patient Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  pathway CarePathway @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, pathwayId])
+  @@index([patientId])
+  @@map("patient_pathways")
+}
+
+// ============================================================
+// Observations
+// ============================================================
+
+model ObservationType {
+  id          String @id @default(uuid()) @db.VarChar(36)
+  code        String @unique @db.VarChar(30) // bp, hr, spo2, temp, glu
+  name        String @db.VarChar(100)
+  unit        String @db.VarChar(30) // mmHg, bpm, %, °C, mg/dL
+  minValue    Decimal? @map("min_value") @db.Decimal(10, 2)
+  maxValue    Decimal? @map("max_value") @db.Decimal(10, 2)
+  components  Json?  // For multi-component types like BP: [{name: "systolic", unit: "mmHg", min: 40, max: 300}]
+
+  observations Observation[]
+
+  @@map("observation_types")
+}
+
+model Observation {
+  id               String   @id @default(uuid()) @db.VarChar(36)
+  patientId        String   @map("patient_id") @db.VarChar(36)
+  typeId           String   @map("type_id") @db.VarChar(36)
+  value            Json     // {systolic: 120, diastolic: 80} or {value: 98}
+  unit             String   @db.VarChar(30)
+  observedAt       DateTime @map("observed_at") @db.Timestamp(3)
+  source           String   @db.VarChar(100) // Healthcare worker, BP monitor, etc.
+  notes            String?  @db.Text
+  facilityId       String?  @map("facility_id") @db.VarChar(36)
+  recordedById     String?  @map("recorded_by_id") @db.VarChar(36)
+  idempotencyKey   String?  @unique @map("idempotency_key") @db.VarChar(36)
+  isSynthetic      Boolean  @default(false) @map("is_synthetic")
+  isAmended        Boolean  @default(false) @map("is_amended")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+
+  patient    Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  type       ObservationType  @relation(fields: [typeId], references: [id])
+  facility   Facility?        @relation(fields: [facilityId], references: [id])
+  recordedBy User?            @relation("ObservationRecorder", fields: [recordedById], references: [id])
+  symptoms   ObservationSymptom[]
+  amendments ObservationAmendment[]
+  alertObservations AlertObservation[]
+
+  @@index([patientId, typeId, observedAt])
+  @@index([patientId, observedAt])
+  @@index([facilityId])
+  @@map("observations")
+}
+
+model SymptomCatalog {
+  id   String @id @default(uuid()) @db.VarChar(36)
+  code String @unique @db.VarChar(50)
+  name String @db.VarChar(100)
+
+  observationSymptoms ObservationSymptom[]
+
+  @@map("symptom_catalog")
+}
+
+model ObservationSymptom {
+  observationId String @map("observation_id") @db.VarChar(36)
+  symptomId     String @map("symptom_id") @db.VarChar(36)
+
+  observation Observation    @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  symptom     SymptomCatalog @relation(fields: [symptomId], references: [id])
+
+  @@id([observationId, symptomId])
+  @@map("observation_symptoms")
+}
+
+model ObservationAmendment {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  observationId  String   @map("observation_id") @db.VarChar(36)
+  previousValue  Json     @map("previous_value")
+  newValue       Json     @map("new_value")
+  reason         String   @db.Text
+  amendedById    String   @map("amended_by_id") @db.VarChar(36)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  observation Observation @relation(fields: [observationId], references: [id], onDelete: Cascade)
+
+  @@index([observationId])
+  @@map("observation_amendments")
+}
+
+// ============================================================
+// Screenings (Mental Health)
+// ============================================================
+
+model QuestionnaireDefinition {
+  id          String @id @default(uuid()) @db.VarChar(36)
+  code        String @unique @db.VarChar(50)
+  name        String @db.VarChar(255)
+  description String? @db.Text
+  privacyLevel String @default("PRIVATE") @map("privacy_level") @db.VarChar(30)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  versions QuestionnaireVersion[]
+
+  @@map("questionnaire_definitions")
+}
+
+model QuestionnaireVersion {
+  id                     String   @id @default(uuid()) @db.VarChar(36)
+  questionnaireId        String   @map("questionnaire_id") @db.VarChar(36)
+  versionNumber          Int      @map("version_number")
+  isActive               Boolean  @default(true) @map("is_active")
+  isSynthetic            Boolean  @default(false) @map("is_synthetic")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  questionnaire QuestionnaireDefinition @relation(fields: [questionnaireId], references: [id])
+  questions     QuestionnaireQuestion[]
+  sessions      ScreeningSession[]
+
+  @@unique([questionnaireId, versionNumber])
+  @@map("questionnaire_versions")
+}
+
+model QuestionnaireQuestion {
+  id        String @id @default(uuid()) @db.VarChar(36)
+  versionId String @map("version_id") @db.VarChar(36)
+  sortOrder Int    @map("sort_order")
+  text      String @db.Text
+  isRequired Boolean @default(true) @map("is_required")
+
+  version QuestionnaireVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  options QuestionnaireOption[]
+  answers ScreeningAnswer[]
+
+  @@index([versionId, sortOrder])
+  @@map("questionnaire_questions")
+}
+
+model QuestionnaireOption {
+  id         String @id @default(uuid()) @db.VarChar(36)
+  questionId String @map("question_id") @db.VarChar(36)
+  sortOrder  Int    @map("sort_order")
+  text       String @db.VarChar(255)
+  value      Int    // numeric value for scoring
+
+  question QuestionnaireQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  ScreeningAnswer[]
+
+  @@index([questionId, sortOrder])
+  @@map("questionnaire_options")
+}
+
+model ScreeningSession {
+  id               String   @id @default(uuid()) @db.VarChar(36)
+  patientId        String   @map("patient_id") @db.VarChar(36)
+  versionId        String   @map("version_id") @db.VarChar(36)
+  recordedById     String?  @map("recorded_by_id") @db.VarChar(36)
+  privacyLevel     String   @default("PRIVATE") @map("privacy_level") @db.VarChar(30)
+  status           String   @default("COMPLETED") @db.VarChar(20) // IN_PROGRESS, COMPLETED
+  completedAt      DateTime? @map("completed_at") @db.Timestamp(3)
+  idempotencyKey   String?  @unique @map("idempotency_key") @db.VarChar(36)
+  isSynthetic      Boolean  @default(false) @map("is_synthetic")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  patient    Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  version    QuestionnaireVersion @relation(fields: [versionId], references: [id])
+  recordedBy User?                @relation("ScreeningRecorder", fields: [recordedById], references: [id])
+  answers    ScreeningAnswer[]
+
+  @@index([patientId])
+  @@map("screening_sessions")
+}
+
+model ScreeningAnswer {
+  id         String @id @default(uuid()) @db.VarChar(36)
+  sessionId  String @map("session_id") @db.VarChar(36)
+  questionId String @map("question_id") @db.VarChar(36)
+  optionId   String @map("option_id") @db.VarChar(36)
+
+  session  ScreeningSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question QuestionnaireQuestion @relation(fields: [questionId], references: [id])
+  option   QuestionnaireOption   @relation(fields: [optionId], references: [id])
+
+  @@unique([sessionId, questionId])
+  @@map("screening_answers")
+}
+
+// ============================================================
+// Clinical Alerts
+// ============================================================
+
+model ClinicalRuleDefinition {
+  id          String @id @default(uuid()) @db.VarChar(36)
+  code        String @unique @db.VarChar(50)
+  name        String @db.VarChar(255)
+  description String? @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  versions ClinicalRuleVersion[]
+
+  @@map("clinical_rule_definitions")
+}
+
+model ClinicalRuleVersion {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  ruleId       String   @map("rule_id") @db.VarChar(36)
+  version      Int
+  config       Json     // threshold values, conditions
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  createdBy    String?  @map("created_by") @db.VarChar(36)
+
+  rule   ClinicalRuleDefinition @relation(fields: [ruleId], references: [id])
+  alerts Alert[]
+
+  @@unique([ruleId, version])
+  @@map("clinical_rule_versions")
+}
+
+model Alert {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  patientId     String   @map("patient_id") @db.VarChar(36)
+  ruleVersionId String   @map("rule_version_id") @db.VarChar(36)
+  level         String   @db.VarChar(20) // HIGH, REVIEW, PRIVATE
+  issue         String   @db.VarChar(255)
+  detail        String?  @db.Text
+  rationale     String?  @db.Text // snapshot of why flagged
+  status        String   @default("OPEN") @db.VarChar(20) // OPEN, IN_REVIEW, REVIEWED, DISMISSED
+  evaluatedAt   DateTime @map("evaluated_at") @db.Timestamp(3)
+  isSynthetic   Boolean  @default(false) @map("is_synthetic")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+
+  patient      Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  ruleVersion  ClinicalRuleVersion  @relation(fields: [ruleVersionId], references: [id])
+  observations AlertObservation[]
+  statusHistory AlertStatusHistory[]
+
+  @@index([patientId, status])
+  @@index([status, level])
+  @@index([patientId, ruleVersionId, status])
+  @@map("alerts")
+}
+
+model AlertObservation {
+  alertId       String @map("alert_id") @db.VarChar(36)
+  observationId String @map("observation_id") @db.VarChar(36)
+
+  alert       Alert       @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  observation Observation @relation(fields: [observationId], references: [id])
+
+  @@id([alertId, observationId])
+  @@map("alert_observations")
+}
+
+model AlertStatusHistory {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  alertId    String   @map("alert_id") @db.VarChar(36)
+  fromStatus String   @map("from_status") @db.VarChar(20)
+  toStatus   String   @map("to_status") @db.VarChar(20)
+  reason     String?  @db.Text
+  actorId    String   @map("actor_id") @db.VarChar(36)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  actor User  @relation("AlertReviewer", fields: [actorId], references: [id])
+
+  @@index([alertId])
+  @@map("alert_status_history")
+}
+
+// ============================================================
+// Consultations & Referrals
+// ============================================================
+
+model Consultation {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  patientId       String   @map("patient_id") @db.VarChar(36)
+  doctorId        String   @map("doctor_id") @db.VarChar(36)
+  kind            String   @db.VarChar(30) // consultation, counselling
+  notes           String?  @db.Text // PHI
+  recommendation  String?  @db.VarChar(500)
+  idempotencyKey  String?  @unique @map("idempotency_key") @db.VarChar(36)
+  isSynthetic     Boolean  @default(false) @map("is_synthetic")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+
+  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor   User      @relation("ConsultationDoctor", fields: [doctorId], references: [id])
+  referral Referral?
+
+  @@index([patientId])
+  @@map("consultations")
+}
+
+model Referral {
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  consultationId    String   @unique @map("consultation_id") @db.VarChar(36)
+  patientId         String   @map("patient_id") @db.VarChar(36)
+  sourceFacilityId  String   @map("source_facility_id") @db.VarChar(36)
+  destFacilityId    String   @map("dest_facility_id") @db.VarChar(36)
+  priority          String   @db.VarChar(20) // HIGH, MEDIUM, ROUTINE
+  status            String   @default("PENDING") @db.VarChar(20) // PENDING, ACCEPTED, COMPLETED, CANCELLED
+  cancelReason      String?  @map("cancel_reason") @db.Text
+  isSynthetic       Boolean  @default(false) @map("is_synthetic")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+
+  consultation    Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  patient         Patient      @relation(fields: [patientId], references: [id])
+  sourceFacility  Facility     @relation("ReferralSource", fields: [sourceFacilityId], references: [id])
+  destFacility    Facility     @relation("ReferralDestination", fields: [destFacilityId], references: [id])
+  statusHistory   ReferralStatusHistory[]
+
+  @@index([patientId, status])
+  @@index([status])
+  @@map("referrals")
+}
+
+model ReferralStatusHistory {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  referralId String   @map("referral_id") @db.VarChar(36)
+  fromStatus String   @map("from_status") @db.VarChar(20)
+  toStatus   String   @map("to_status") @db.VarChar(20)
+  reason     String?  @db.Text
+  actorId    String   @map("actor_id") @db.VarChar(36)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  actor    User     @relation("ReferralTransitioner", fields: [actorId], references: [id])
+
+  @@index([referralId])
+  @@map("referral_status_history")
+}
+
+// ============================================================
+// Sync & Idempotency
+// ============================================================
+
+model IdempotencyReceipt {
+  key        String   @id @db.VarChar(36)
+  userId     String   @map("user_id") @db.VarChar(36)
+  endpoint   String   @db.VarChar(255)
+  statusCode Int      @map("status_code")
+  response   Json
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  expiresAt  DateTime @map("expires_at") @db.Timestamp(3)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("idempotency_receipts")
+}
+
+// ============================================================
+// Audit
+// ============================================================
+
+model AuditEvent {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  actorId      String?  @map("actor_id") @db.VarChar(36)
+  action       String   @db.VarChar(100)
+  resourceType String   @map("resource_type") @db.VarChar(50)
+  resourceId   String?  @map("resource_id") @db.VarChar(36)
+  facilityId   String?  @map("facility_id") @db.VarChar(36)
+  outcome      String   @db.VarChar(20) // SUCCESS, DENIED, ERROR
+  metadata     Json?
+  requestId    String?  @map("request_id") @db.VarChar(36)
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([resourceType, resourceId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([facilityId, createdAt])
+  @@map("audit_events")
+}
