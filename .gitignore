@@ -43,5 +43,5 @@ AGENTS.md
 .claude/
 CLAUDE_BUILD_PROMPT.md
 
-# MySQL local data
+# Local database data
 /tmp/pth-mysql*

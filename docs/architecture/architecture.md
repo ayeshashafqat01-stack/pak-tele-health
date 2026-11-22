@@ -127,8 +127,9 @@ The `IdempotencyReceipt` table stores a mapping from idempotency key to the orig
 
 ### Engine and Encoding
 
-- MySQL 8 with InnoDB
-- Character set: `utf8mb4` / collation: `utf8mb4_unicode_ci`
+- Supabase PostgreSQL for hosted environments; PostgreSQL 17 in local Docker development
+- UTF-8/Unicode text storage for English and future Urdu content
+- Vercel runtime traffic uses the transaction pooler; migrations use the direct/session connection
 - All timestamps stored in UTC (`TIMESTAMP(3)` with millisecond precision)
 
 ### Key Design Decisions

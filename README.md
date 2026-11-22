@@ -12,7 +12,7 @@ Pak-Tele-Health is a telehealth platform designed for rural Pakistan. Healthcare
 |---|---|
 | Framework | Next.js 16 (App Router, React 19) |
 | Language | TypeScript 5 |
-| Database | MySQL 8 (InnoDB, utf8mb4, UTC) |
+| Database | PostgreSQL 17 locally / Supabase PostgreSQL in hosted environments |
 | ORM | Prisma 6 |
 | Auth | NextAuth v5 (JWT strategy, Credentials provider) |
 | Offline | Dexie (IndexedDB) + sync queue with idempotency keys |
@@ -27,15 +27,14 @@ Pak-Tele-Health is a telehealth platform designed for rural Pakistan. Healthcare
 ## Prerequisites
 
 - **Node.js** 20+ (LTS recommended)
-- **Docker** and **Docker Compose** (for MySQL)
-- **MySQL 8** (provided via docker-compose)
+- **Docker** and **Docker Compose** (for local PostgreSQL), or a Supabase project
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Start MySQL
+# 1. Start local PostgreSQL
 docker-compose up -d
 
 # 2. Install dependencies
@@ -119,11 +118,20 @@ src/
 prisma/
   schema.prisma           # Database schema
   seed.ts                 # Synthetic data seeder
-docker/
-  mysql/init.sql          # MySQL init script
 tests/                    # Test suites
 docs/                     # Project documentation
 ```
+
+## Supabase and Vercel
+
+Supabase is used as PostgreSQL hosting only. Authentication and authorization remain in Auth.js and the application services; the Supabase Data API should stay disabled.
+
+Use two database URLs in hosted environments:
+
+- `DATABASE_URL`: Supabase transaction pooler URL (port `6543`) for Vercel runtime traffic. Append `pgbouncer=true&connection_limit=1` while preserving required SSL parameters.
+- `DATABASE_MIGRATION_URL`: Supabase direct or session-pooler URL (port `5432`) for Prisma migrations and administrative commands.
+
+Apply committed production migrations with `npx prisma migrate deploy`. Never run `prisma migrate dev`, `prisma db push`, or `prisma migrate reset` against production. Synthetic data is seeded only as an explicit one-time action with `NODE_ENV=production ALLOW_SEED=true npm run db:seed`; keep `ALLOW_SEED=false` on Vercel.
 
 ---
 

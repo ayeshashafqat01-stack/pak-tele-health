@@ -50,8 +50,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem("pth-theme") as Theme | null;
     const initial = stored ?? "system";
-    setThemeState(initial);
-    applyTheme(initial);
+    const initialThemeFrame = window.requestAnimationFrame(() => {
+      setThemeState(initial);
+      applyTheme(initial);
+    });
 
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
@@ -60,7 +62,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
     };
     mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    return () => {
+      window.cancelAnimationFrame(initialThemeFrame);
+      mq.removeEventListener("change", handler);
+    };
   }, [applyTheme, theme]);
 
   return (

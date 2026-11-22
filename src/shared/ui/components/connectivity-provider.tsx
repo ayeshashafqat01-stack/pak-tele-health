@@ -45,7 +45,9 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
 
-    if (!navigator.onLine) setStatusState("offline");
+    const initialStatusFrame = window.requestAnimationFrame(() => {
+      if (!navigator.onLine) setStatusState("offline");
+    });
 
     // Periodic health check every 30s — catches "connected but no internet" cases
     const healthCheck = setInterval(async () => {
@@ -72,6 +74,7 @@ export function ConnectivityProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
+      window.cancelAnimationFrame(initialStatusFrame);
       clearInterval(healthCheck);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -11,7 +11,7 @@ Pak-Tele-Health is a web application handling protected health information (PHI)
 | Boundary | Description |
 |---|---|
 | **B1: Browser <-> Server** | HTTPS transport. JWT cookie auth. All API calls cross this boundary. |
-| **B2: Server <-> Database** | Internal network. Prisma Client connects to MySQL over TCP 3306. |
+| **B2: Server <-> Database** | Encrypted external boundary. Prisma Client connects from Vercel to Supabase PostgreSQL through the transaction pooler; migrations use a separate direct/session URL. The Supabase Data API is disabled. |
 | **B3: IndexedDB (client)** | Offline queue persisted on the user's device. Outside server control. |
 | **B4: Admin boundary** | Admin role has elevated access to user management, config, and audit. |
 

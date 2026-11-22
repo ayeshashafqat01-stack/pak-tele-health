@@ -1,13 +1,14 @@
 // Pak-Tele-Health Prisma Schema
-// MySQL 8 with InnoDB, utf8mb4, UTC timezone
+// Supabase PostgreSQL. Runtime traffic uses the pooled URL; migrations use the direct URL.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_MIGRATION_URL")
 }
 
 // ============================================================
@@ -15,26 +16,26 @@ datasource db {
 // ============================================================
 
 model User {
-  id             String   @id @default(uuid()) @db.VarChar(36)
-  email          String   @unique @db.VarChar(255)
-  name           String   @db.VarChar(255)
-  passwordHash   String   @map("password_hash") @db.VarChar(255)
-  isActive       Boolean  @default(true) @map("is_active")
-  isSynthetic    Boolean  @default(false) @map("is_synthetic")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(3)
-  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamp(3)
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  email        String    @unique @db.VarChar(255)
+  name         String    @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  isActive     Boolean   @default(true) @map("is_active")
+  isSynthetic  Boolean   @default(false) @map("is_synthetic")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(3)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamp(3)
 
-  userRoles              UserRole[]
-  facilityAssignments    UserFacilityAssignment[]
-  sessions               Session[]
-  accounts               Account[]
-  auditEvents            AuditEvent[]
-  recordedObservations   Observation[]          @relation("ObservationRecorder")
-  screeningSessions      ScreeningSession[]     @relation("ScreeningRecorder")
-  consultations          Consultation[]         @relation("ConsultationDoctor")
-  alertReviews           AlertStatusHistory[]   @relation("AlertReviewer")
-  referralTransitions    ReferralStatusHistory[] @relation("ReferralTransitioner")
+  userRoles            UserRole[]
+  facilityAssignments  UserFacilityAssignment[]
+  sessions             Session[]
+  accounts             Account[]
+  auditEvents          AuditEvent[]
+  recordedObservations Observation[]            @relation("ObservationRecorder")
+  screeningSessions    ScreeningSession[]       @relation("ScreeningRecorder")
+  consultations        Consultation[]           @relation("ConsultationDoctor")
+  alertReviews         AlertStatusHistory[]     @relation("AlertReviewer")
+  referralTransitions  ReferralStatusHistory[]  @relation("ReferralTransitioner")
 
   @@map("users")
 }
@@ -143,8 +144,8 @@ model Facility {
   userAssignments    UserFacilityAssignment[]
   patientAssignments PatientFacilityAssignment[]
   observations       Observation[]
-  referralsFrom      Referral[]  @relation("ReferralSource")
-  referralsTo        Referral[]  @relation("ReferralDestination")
+  referralsFrom      Referral[]                  @relation("ReferralSource")
+  referralsTo        Referral[]                  @relation("ReferralDestination")
 
   @@map("facilities")
 }
@@ -167,22 +168,22 @@ model UserFacilityAssignment {
 // ============================================================
 
 model Patient {
-  id          String   @id @default(uuid()) @db.VarChar(36)
-  code        String   @unique @db.VarChar(20) // PT-000101
-  name        String   @db.VarChar(255) // PHI
-  dateOfBirth DateTime? @map("date_of_birth") @db.Date // PHI - nullable, age used if DOB unknown
-  age         Int?     // Used when DOB unknown
-  sex         String   @db.VarChar(20) // Male, Female
-  location    String?  @db.VarChar(500) // PHI
-  medicalInfo String?  @map("medical_info") @db.Text // PHI
-  status      String   @default("ACTIVE") @db.VarChar(20) // ACTIVE, ARCHIVED
-  consentGiven Boolean @default(false) @map("consent_given")
-  isSynthetic Boolean  @default(false) @map("is_synthetic")
-  version     Int      @default(1) // Optimistic concurrency
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamp(3)
-  createdBy   String?  @map("created_by") @db.VarChar(36)
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  code         String    @unique @db.VarChar(20) // PT-000101
+  name         String    @db.VarChar(255) // PHI
+  dateOfBirth  DateTime? @map("date_of_birth") @db.Date // PHI - nullable, age used if DOB unknown
+  age          Int? // Used when DOB unknown
+  sex          String    @db.VarChar(20) // Male, Female
+  location     String?   @db.VarChar(500) // PHI
+  medicalInfo  String?   @map("medical_info") @db.Text // PHI
+  status       String    @default("ACTIVE") @db.VarChar(20) // ACTIVE, ARCHIVED
+  consentGiven Boolean   @default(false) @map("consent_given")
+  isSynthetic  Boolean   @default(false) @map("is_synthetic")
+  version      Int       @default(1) // Optimistic concurrency
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamp(3)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamp(3)
+  createdBy    String?   @map("created_by") @db.VarChar(36)
 
   facilityAssignments PatientFacilityAssignment[]
   patientPathways     PatientPathway[]
@@ -214,9 +215,9 @@ model PatientFacilityAssignment {
 }
 
 model CarePathway {
-  id          String @id @default(uuid()) @db.VarChar(36)
-  code        String @unique @db.VarChar(50) // maternal, chronic, mental
-  name        String @db.VarChar(100)
+  id          String  @id @default(uuid()) @db.VarChar(36)
+  code        String  @unique @db.VarChar(50) // maternal, chronic, mental
+  name        String  @db.VarChar(100)
   description String? @db.VarChar(500)
 
   patientPathways PatientPathway[]
@@ -225,13 +226,13 @@ model CarePathway {
 }
 
 model PatientPathway {
-  id              String   @id @default(uuid()) @db.VarChar(36)
-  patientId       String   @map("patient_id") @db.VarChar(36)
-  pathwayId       String   @map("pathway_id") @db.VarChar(36)
-  pregnancyWeeks  Int?     @map("pregnancy_weeks")
-  isActive        Boolean  @default(true) @map("is_active")
-  startedAt       DateTime @default(now()) @map("started_at") @db.Timestamp(3)
-  endedAt         DateTime? @map("ended_at") @db.Timestamp(3)
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  patientId      String    @map("patient_id") @db.VarChar(36)
+  pathwayId      String    @map("pathway_id") @db.VarChar(36)
+  pregnancyWeeks Int?      @map("pregnancy_weeks")
+  isActive       Boolean   @default(true) @map("is_active")
+  startedAt      DateTime  @default(now()) @map("started_at") @db.Timestamp(3)
+  endedAt        DateTime? @map("ended_at") @db.Timestamp(3)
 
   patient Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
   pathway CarePathway @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
@@ -246,13 +247,13 @@ model PatientPathway {
 // ============================================================
 
 model ObservationType {
-  id          String @id @default(uuid()) @db.VarChar(36)
-  code        String @unique @db.VarChar(30) // bp, hr, spo2, temp, glu
-  name        String @db.VarChar(100)
-  unit        String @db.VarChar(30) // mmHg, bpm, %, °C, mg/dL
-  minValue    Decimal? @map("min_value") @db.Decimal(10, 2)
-  maxValue    Decimal? @map("max_value") @db.Decimal(10, 2)
-  components  Json?  // For multi-component types like BP: [{name: "systolic", unit: "mmHg", min: 40, max: 300}]
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  code       String   @unique @db.VarChar(30) // bp, hr, spo2, temp, glu
+  name       String   @db.VarChar(100)
+  unit       String   @db.VarChar(30) // mmHg, bpm, %, °C, mg/dL
+  minValue   Decimal? @map("min_value") @db.Decimal(10, 2)
+  maxValue   Decimal? @map("max_value") @db.Decimal(10, 2)
+  components Json? // For multi-component types like BP: [{name: "systolic", unit: "mmHg", min: 40, max: 300}]
 
   observations Observation[]
 
@@ -260,28 +261,28 @@ model ObservationType {
 }
 
 model Observation {
-  id               String   @id @default(uuid()) @db.VarChar(36)
-  patientId        String   @map("patient_id") @db.VarChar(36)
-  typeId           String   @map("type_id") @db.VarChar(36)
-  value            Json     // {systolic: 120, diastolic: 80} or {value: 98}
-  unit             String   @db.VarChar(30)
-  observedAt       DateTime @map("observed_at") @db.Timestamp(3)
-  source           String   @db.VarChar(100) // Healthcare worker, BP monitor, etc.
-  notes            String?  @db.Text
-  facilityId       String?  @map("facility_id") @db.VarChar(36)
-  recordedById     String?  @map("recorded_by_id") @db.VarChar(36)
-  idempotencyKey   String?  @unique @map("idempotency_key") @db.VarChar(36)
-  isSynthetic      Boolean  @default(false) @map("is_synthetic")
-  isAmended        Boolean  @default(false) @map("is_amended")
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(3)
-  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  patientId      String   @map("patient_id") @db.VarChar(36)
+  typeId         String   @map("type_id") @db.VarChar(36)
+  value          Json // {systolic: 120, diastolic: 80} or {value: 98}
+  unit           String   @db.VarChar(30)
+  observedAt     DateTime @map("observed_at") @db.Timestamp(3)
+  source         String   @db.VarChar(100) // Healthcare worker, BP monitor, etc.
+  notes          String?  @db.Text
+  facilityId     String?  @map("facility_id") @db.VarChar(36)
+  recordedById   String?  @map("recorded_by_id") @db.VarChar(36)
+  idempotencyKey String?  @unique @map("idempotency_key") @db.VarChar(36)
+  isSynthetic    Boolean  @default(false) @map("is_synthetic")
+  isAmended      Boolean  @default(false) @map("is_amended")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
 
-  patient    Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  type       ObservationType  @relation(fields: [typeId], references: [id])
-  facility   Facility?        @relation(fields: [facilityId], references: [id])
-  recordedBy User?            @relation("ObservationRecorder", fields: [recordedById], references: [id])
-  symptoms   ObservationSymptom[]
-  amendments ObservationAmendment[]
+  patient           Patient                @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  type              ObservationType        @relation(fields: [typeId], references: [id])
+  facility          Facility?              @relation(fields: [facilityId], references: [id])
+  recordedBy        User?                  @relation("ObservationRecorder", fields: [recordedById], references: [id])
+  symptoms          ObservationSymptom[]
+  amendments        ObservationAmendment[]
   alertObservations AlertObservation[]
 
   @@index([patientId, typeId, observedAt])
@@ -312,13 +313,13 @@ model ObservationSymptom {
 }
 
 model ObservationAmendment {
-  id             String   @id @default(uuid()) @db.VarChar(36)
-  observationId  String   @map("observation_id") @db.VarChar(36)
-  previousValue  Json     @map("previous_value")
-  newValue       Json     @map("new_value")
-  reason         String   @db.Text
-  amendedById    String   @map("amended_by_id") @db.VarChar(36)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  observationId String   @map("observation_id") @db.VarChar(36)
+  previousValue Json     @map("previous_value")
+  newValue      Json     @map("new_value")
+  reason        String   @db.Text
+  amendedById   String   @map("amended_by_id") @db.VarChar(36)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(3)
 
   observation Observation @relation(fields: [observationId], references: [id], onDelete: Cascade)
 
@@ -331,12 +332,12 @@ model ObservationAmendment {
 // ============================================================
 
 model QuestionnaireDefinition {
-  id          String @id @default(uuid()) @db.VarChar(36)
-  code        String @unique @db.VarChar(50)
-  name        String @db.VarChar(255)
-  description String? @db.Text
-  privacyLevel String @default("PRIVATE") @map("privacy_level") @db.VarChar(30)
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  code         String   @unique @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  description  String?  @db.Text
+  privacyLevel String   @default("PRIVATE") @map("privacy_level") @db.VarChar(30)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(3)
 
   versions QuestionnaireVersion[]
 
@@ -344,12 +345,12 @@ model QuestionnaireDefinition {
 }
 
 model QuestionnaireVersion {
-  id                     String   @id @default(uuid()) @db.VarChar(36)
-  questionnaireId        String   @map("questionnaire_id") @db.VarChar(36)
-  versionNumber          Int      @map("version_number")
-  isActive               Boolean  @default(true) @map("is_active")
-  isSynthetic            Boolean  @default(false) @map("is_synthetic")
-  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  questionnaireId String   @map("questionnaire_id") @db.VarChar(36)
+  versionNumber   Int      @map("version_number")
+  isActive        Boolean  @default(true) @map("is_active")
+  isSynthetic     Boolean  @default(false) @map("is_synthetic")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(3)
 
   questionnaire QuestionnaireDefinition @relation(fields: [questionnaireId], references: [id])
   questions     QuestionnaireQuestion[]
@@ -360,13 +361,13 @@ model QuestionnaireVersion {
 }
 
 model QuestionnaireQuestion {
-  id        String @id @default(uuid()) @db.VarChar(36)
-  versionId String @map("version_id") @db.VarChar(36)
-  sortOrder Int    @map("sort_order")
-  text      String @db.Text
+  id         String  @id @default(uuid()) @db.VarChar(36)
+  versionId  String  @map("version_id") @db.VarChar(36)
+  sortOrder  Int     @map("sort_order")
+  text       String  @db.Text
   isRequired Boolean @default(true) @map("is_required")
 
-  version QuestionnaireVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  version QuestionnaireVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
   options QuestionnaireOption[]
   answers ScreeningAnswer[]
 
@@ -379,7 +380,7 @@ model QuestionnaireOption {
   questionId String @map("question_id") @db.VarChar(36)
   sortOrder  Int    @map("sort_order")
   text       String @db.VarChar(255)
-  value      Int    // numeric value for scoring
+  value      Int // numeric value for scoring
 
   question QuestionnaireQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
   answers  ScreeningAnswer[]
@@ -389,16 +390,16 @@ model QuestionnaireOption {
 }
 
 model ScreeningSession {
-  id               String   @id @default(uuid()) @db.VarChar(36)
-  patientId        String   @map("patient_id") @db.VarChar(36)
-  versionId        String   @map("version_id") @db.VarChar(36)
-  recordedById     String?  @map("recorded_by_id") @db.VarChar(36)
-  privacyLevel     String   @default("PRIVATE") @map("privacy_level") @db.VarChar(30)
-  status           String   @default("COMPLETED") @db.VarChar(20) // IN_PROGRESS, COMPLETED
-  completedAt      DateTime? @map("completed_at") @db.Timestamp(3)
-  idempotencyKey   String?  @unique @map("idempotency_key") @db.VarChar(36)
-  isSynthetic      Boolean  @default(false) @map("is_synthetic")
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  patientId      String    @map("patient_id") @db.VarChar(36)
+  versionId      String    @map("version_id") @db.VarChar(36)
+  recordedById   String?   @map("recorded_by_id") @db.VarChar(36)
+  privacyLevel   String    @default("PRIVATE") @map("privacy_level") @db.VarChar(30)
+  status         String    @default("COMPLETED") @db.VarChar(20) // IN_PROGRESS, COMPLETED
+  completedAt    DateTime? @map("completed_at") @db.Timestamp(3)
+  idempotencyKey String?   @unique @map("idempotency_key") @db.VarChar(36)
+  isSynthetic    Boolean   @default(false) @map("is_synthetic")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamp(3)
 
   patient    Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
   version    QuestionnaireVersion @relation(fields: [versionId], references: [id])
@@ -428,10 +429,10 @@ model ScreeningAnswer {
 // ============================================================
 
 model ClinicalRuleDefinition {
-  id          String @id @default(uuid()) @db.VarChar(36)
-  code        String @unique @db.VarChar(50)
-  name        String @db.VarChar(255)
-  description String? @db.Text
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  code        String   @unique @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(3)
 
   versions ClinicalRuleVersion[]
@@ -440,13 +441,13 @@ model ClinicalRuleDefinition {
 }
 
 model ClinicalRuleVersion {
-  id           String   @id @default(uuid()) @db.VarChar(36)
-  ruleId       String   @map("rule_id") @db.VarChar(36)
-  version      Int
-  config       Json     // threshold values, conditions
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(3)
-  createdBy    String?  @map("created_by") @db.VarChar(36)
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  ruleId    String   @map("rule_id") @db.VarChar(36)
+  version   Int
+  config    Json // threshold values, conditions
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  createdBy String?  @map("created_by") @db.VarChar(36)
 
   rule   ClinicalRuleDefinition @relation(fields: [ruleId], references: [id])
   alerts Alert[]
@@ -469,9 +470,9 @@ model Alert {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(3)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
 
-  patient      Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  ruleVersion  ClinicalRuleVersion  @relation(fields: [ruleVersionId], references: [id])
-  observations AlertObservation[]
+  patient       Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  ruleVersion   ClinicalRuleVersion  @relation(fields: [ruleVersionId], references: [id])
+  observations  AlertObservation[]
   statusHistory AlertStatusHistory[]
 
   @@index([patientId, status])
@@ -512,16 +513,16 @@ model AlertStatusHistory {
 // ============================================================
 
 model Consultation {
-  id              String   @id @default(uuid()) @db.VarChar(36)
-  patientId       String   @map("patient_id") @db.VarChar(36)
-  doctorId        String   @map("doctor_id") @db.VarChar(36)
-  kind            String   @db.VarChar(30) // consultation, counselling
-  notes           String?  @db.Text // PHI
-  recommendation  String?  @db.VarChar(500)
-  idempotencyKey  String?  @unique @map("idempotency_key") @db.VarChar(36)
-  isSynthetic     Boolean  @default(false) @map("is_synthetic")
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(3)
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  patientId      String   @map("patient_id") @db.VarChar(36)
+  doctorId       String   @map("doctor_id") @db.VarChar(36)
+  kind           String   @db.VarChar(30) // consultation, counselling
+  notes          String?  @db.Text // PHI
+  recommendation String?  @db.VarChar(500)
+  idempotencyKey String?  @unique @map("idempotency_key") @db.VarChar(36)
+  isSynthetic    Boolean  @default(false) @map("is_synthetic")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
 
   patient  Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor   User      @relation("ConsultationDoctor", fields: [doctorId], references: [id])
@@ -532,23 +533,23 @@ model Consultation {
 }
 
 model Referral {
-  id                String   @id @default(uuid()) @db.VarChar(36)
-  consultationId    String   @unique @map("consultation_id") @db.VarChar(36)
-  patientId         String   @map("patient_id") @db.VarChar(36)
-  sourceFacilityId  String   @map("source_facility_id") @db.VarChar(36)
-  destFacilityId    String   @map("dest_facility_id") @db.VarChar(36)
-  priority          String   @db.VarChar(20) // HIGH, MEDIUM, ROUTINE
-  status            String   @default("PENDING") @db.VarChar(20) // PENDING, ACCEPTED, COMPLETED, CANCELLED
-  cancelReason      String?  @map("cancel_reason") @db.Text
-  isSynthetic       Boolean  @default(false) @map("is_synthetic")
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp(3)
-  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
+  id               String   @id @default(uuid()) @db.VarChar(36)
+  consultationId   String   @unique @map("consultation_id") @db.VarChar(36)
+  patientId        String   @map("patient_id") @db.VarChar(36)
+  sourceFacilityId String   @map("source_facility_id") @db.VarChar(36)
+  destFacilityId   String   @map("dest_facility_id") @db.VarChar(36)
+  priority         String   @db.VarChar(20) // HIGH, MEDIUM, ROUTINE
+  status           String   @default("PENDING") @db.VarChar(20) // PENDING, ACCEPTED, COMPLETED, CANCELLED
+  cancelReason     String?  @map("cancel_reason") @db.Text
+  isSynthetic      Boolean  @default(false) @map("is_synthetic")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamp(3)
 
-  consultation    Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
-  patient         Patient      @relation(fields: [patientId], references: [id])
-  sourceFacility  Facility     @relation("ReferralSource", fields: [sourceFacilityId], references: [id])
-  destFacility    Facility     @relation("ReferralDestination", fields: [destFacilityId], references: [id])
-  statusHistory   ReferralStatusHistory[]
+  consultation   Consultation            @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  patient        Patient                 @relation(fields: [patientId], references: [id])
+  sourceFacility Facility                @relation("ReferralSource", fields: [sourceFacilityId], references: [id])
+  destFacility   Facility                @relation("ReferralDestination", fields: [destFacilityId], references: [id])
+  statusHistory  ReferralStatusHistory[]
 
   @@index([patientId, status])
   @@index([status])
