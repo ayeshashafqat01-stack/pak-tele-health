@@ -380,26 +380,30 @@ async function main() {
     "Nearly every day",
   ];
 
-  // Only create questions if they don't exist
-  const existingQuestions = await prisma.questionnaireQuestion.findMany({
-    where: { versionId: questVersion.id },
-  });
-
-  if (existingQuestions.length === 0) {
-    for (let qi = 0; qi < demoQuestions.length; qi++) {
-      const q = await prisma.questionnaireQuestion.create({
+  // Resume safely if a previous seed was interrupted partway through.
+  for (let qi = 0; qi < demoQuestions.length; qi++) {
+    const existingQuestion = await prisma.questionnaireQuestion.findFirst({
+      where: { versionId: questVersion.id, sortOrder: qi + 1 },
+    });
+    const question =
+      existingQuestion ??
+      (await prisma.questionnaireQuestion.create({
         data: {
           versionId: questVersion.id,
           sortOrder: qi + 1,
           text: demoQuestions[qi],
           isRequired: true,
         },
-      });
+      }));
 
-      for (let oi = 0; oi < demoOptions.length; oi++) {
+    for (let oi = 0; oi < demoOptions.length; oi++) {
+      const existingOption = await prisma.questionnaireOption.findFirst({
+        where: { questionId: question.id, sortOrder: oi + 1 },
+      });
+      if (!existingOption) {
         await prisma.questionnaireOption.create({
           data: {
-            questionId: q.id,
+            questionId: question.id,
             sortOrder: oi + 1,
             text: demoOptions[oi],
             value: oi,
